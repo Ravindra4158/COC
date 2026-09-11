@@ -1,0 +1,9 @@
+{
+  "max_allowed_simulations": 4000,
+  "baseline_simulations": 2000,
+  "patch_simulations_per_recommendation": 200,
+  "recommendations_evaluated": 10,
+  "total_simulations_used": 4000,
+  "within_budget": true,
+  "baseline_weighted_risk": 13.9775
+}

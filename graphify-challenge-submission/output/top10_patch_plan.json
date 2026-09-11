@@ -1,0 +1,193 @@
+[
+  {
+    "rank": 1,
+    "vulnerability_id": "h39-v2",
+    "host_id": 39,
+    "cvss": 8.415071,
+    "associated_attacker_entry_to_critical_asset_path": [
+      0,
+      29,
+      39,
+      7,
+      11,
+      5,
+      35
+    ],
+    "baseline_weighted_risk": 13.9775,
+    "patched_weighted_risk": 10.7,
+    "estimated_risk_reduction_fraction": 0.234484,
+    "estimated_risk_reduction_percent": 23.4484,
+    "explanation": "h39-v2 contributes individual host enablement 0.6692; it lies on [0, 29, 39, 7, 11, 5, 35] and patching it reduced simulated weighted critical risk by 23.45%."
+  },
+  {
+    "rank": 2,
+    "vulnerability_id": "h29-v1",
+    "host_id": 29,
+    "cvss": 8.026431,
+    "associated_attacker_entry_to_critical_asset_path": [
+      0,
+      29,
+      37,
+      38,
+      35
+    ],
+    "baseline_weighted_risk": 13.9775,
+    "patched_weighted_risk": 13.9775,
+    "estimated_risk_reduction_fraction": 0.0,
+    "estimated_risk_reduction_percent": 0.0,
+    "explanation": "h29-v1 contributes individual host enablement 0.2983; it lies on [0, 29, 37, 38, 35] and patching it reduced simulated weighted critical risk by 0.00%."
+  },
+  {
+    "rank": 3,
+    "vulnerability_id": "h12-v1",
+    "host_id": 12,
+    "cvss": 9.331463,
+    "associated_attacker_entry_to_critical_asset_path": [
+      0,
+      12,
+      35
+    ],
+    "baseline_weighted_risk": 13.9775,
+    "patched_weighted_risk": 13.9775,
+    "estimated_risk_reduction_fraction": 0.0,
+    "estimated_risk_reduction_percent": 0.0,
+    "explanation": "h12-v1 contributes individual host enablement 0.5331; it lies on [0, 12, 35] and patching it reduced simulated weighted critical risk by 0.00%."
+  },
+  {
+    "rank": 4,
+    "vulnerability_id": "h7-v1",
+    "host_id": 7,
+    "cvss": 8.911989,
+    "associated_attacker_entry_to_critical_asset_path": [
+      0,
+      29,
+      39,
+      7,
+      11,
+      5,
+      35
+    ],
+    "baseline_weighted_risk": 13.9775,
+    "patched_weighted_risk": 13.9775,
+    "estimated_risk_reduction_fraction": 0.0,
+    "estimated_risk_reduction_percent": 0.0,
+    "explanation": "h7-v1 contributes individual host enablement 0.4945; it lies on [0, 29, 39, 7, 11, 5, 35] and patching it reduced simulated weighted critical risk by 0.00%."
+  },
+  {
+    "rank": 5,
+    "vulnerability_id": "h36-v1",
+    "host_id": 36,
+    "cvss": 9.591619,
+    "associated_attacker_entry_to_critical_asset_path": [
+      0,
+      12,
+      8,
+      36
+    ],
+    "baseline_weighted_risk": 13.9775,
+    "patched_weighted_risk": 13.035,
+    "estimated_risk_reduction_fraction": 0.06743,
+    "estimated_risk_reduction_percent": 6.743,
+    "explanation": "h36-v1 contributes individual host enablement 0.5640; it lies on [0, 12, 8, 36] and patching it reduced simulated weighted critical risk by 6.74%."
+  },
+  {
+    "rank": 6,
+    "vulnerability_id": "h19-v1",
+    "host_id": 19,
+    "cvss": 9.354263,
+    "associated_attacker_entry_to_critical_asset_path": [
+      0,
+      29,
+      19,
+      3,
+      12,
+      35
+    ],
+    "baseline_weighted_risk": 13.9775,
+    "patched_weighted_risk": 13.9775,
+    "estimated_risk_reduction_fraction": 0.0,
+    "estimated_risk_reduction_percent": 0.0,
+    "explanation": "h19-v1 contributes individual host enablement 0.4860; it lies on [0, 29, 19, 3, 12, 35] and patching it reduced simulated weighted critical risk by 0.00%."
+  },
+  {
+    "rank": 7,
+    "vulnerability_id": "h38-v2",
+    "host_id": 38,
+    "cvss": 7.601648,
+    "associated_attacker_entry_to_critical_asset_path": [
+      0,
+      12,
+      35,
+      38,
+      37,
+      15,
+      14,
+      8,
+      36
+    ],
+    "baseline_weighted_risk": 13.9775,
+    "patched_weighted_risk": 13.765,
+    "estimated_risk_reduction_fraction": 0.015203,
+    "estimated_risk_reduction_percent": 1.5203,
+    "explanation": "h38-v2 contributes individual host enablement 0.2474; it lies on [0, 12, 35, 38, 37, 15, 14, 8, 36] and patching it reduced simulated weighted critical risk by 1.52%."
+  },
+  {
+    "rank": 8,
+    "vulnerability_id": "h27-v1",
+    "host_id": 27,
+    "cvss": 9.661865,
+    "associated_attacker_entry_to_critical_asset_path": [
+      0,
+      29,
+      19,
+      27,
+      16,
+      5,
+      35
+    ],
+    "baseline_weighted_risk": 13.9775,
+    "patched_weighted_risk": 13.9775,
+    "estimated_risk_reduction_fraction": 0.0,
+    "estimated_risk_reduction_percent": 0.0,
+    "explanation": "h27-v1 contributes individual host enablement 0.7375; it lies on [0, 29, 19, 27, 16, 5, 35] and patching it reduced simulated weighted critical risk by 0.00%."
+  },
+  {
+    "rank": 9,
+    "vulnerability_id": "h25-v1",
+    "host_id": 25,
+    "cvss": 7.975499,
+    "associated_attacker_entry_to_critical_asset_path": [
+      0,
+      12,
+      2,
+      25,
+      10,
+      35
+    ],
+    "baseline_weighted_risk": 13.9775,
+    "patched_weighted_risk": 13.9775,
+    "estimated_risk_reduction_fraction": 0.0,
+    "estimated_risk_reduction_percent": 0.0,
+    "explanation": "h25-v1 contributes individual host enablement 0.5667; it lies on [0, 12, 2, 25, 10, 35] and patching it reduced simulated weighted critical risk by 0.00%."
+  },
+  {
+    "rank": 10,
+    "vulnerability_id": "h33-v1",
+    "host_id": 33,
+    "cvss": 9.175253,
+    "associated_attacker_entry_to_critical_asset_path": [
+      0,
+      29,
+      33,
+      26,
+      3,
+      12,
+      35
+    ],
+    "baseline_weighted_risk": 13.9775,
+    "patched_weighted_risk": 13.9775,
+    "estimated_risk_reduction_fraction": 0.0,
+    "estimated_risk_reduction_percent": 0.0,
+    "explanation": "h33-v1 contributes individual host enablement 0.3946; it lies on [0, 29, 33, 26, 3, 12, 35] and patching it reduced simulated weighted critical risk by 0.00%."
+  }
+]

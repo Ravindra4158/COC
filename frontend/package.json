@@ -1,0 +1,16 @@
+{
+  "name": "cy02-dashboard",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {"dev": "vite", "build": "vite build", "preview": "vite preview"},
+  "dependencies": {
+    "@vitejs/plugin-react": "latest",
+    "cytoscape": "latest",
+    "react": "latest",
+    "react-dom": "latest",
+    "recharts": "latest",
+    "vite": "latest"
+  },
+  "devDependencies": {}
+}

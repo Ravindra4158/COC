@@ -1,0 +1,14 @@
+{
+  "total_hosts": 40,
+  "total_vulnerabilities": 80,
+  "critical_assets": 5,
+  "reachable_critical_assets": 5,
+  "attack_paths": 10,
+  "simulation_count": 3998,
+  "stage_1_simulations": 2000,
+  "stage_2_simulations": 1998,
+  "candidate_count": 74,
+  "top10_count": 10,
+  "baseline_risk": 11.297,
+  "runtime_seconds": 1.4514
+}

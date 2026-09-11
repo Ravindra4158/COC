@@ -1,0 +1,3 @@
+asset_id,host_id,impact_weight
+asset-db,h3,1.0
+asset-backup,h4,0.8

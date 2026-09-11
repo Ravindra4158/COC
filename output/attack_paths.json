@@ -1,0 +1,451 @@
+[
+  {
+    "entry_point": 0,
+    "target": 35,
+    "path": [
+      0,
+      12,
+      35
+    ],
+    "vulnerabilities": [
+      {
+        "host_id": 0,
+        "vulnerability_id": "h0-v1"
+      },
+      {
+        "host_id": 0,
+        "vulnerability_id": "h0-v2"
+      },
+      {
+        "host_id": 12,
+        "vulnerability_id": "h12-v1"
+      },
+      {
+        "host_id": 12,
+        "vulnerability_id": "h12-v2"
+      },
+      {
+        "host_id": 35,
+        "vulnerability_id": "h35-v1"
+      },
+      {
+        "host_id": 35,
+        "vulnerability_id": "h35-v2"
+      }
+    ]
+  },
+  {
+    "entry_point": 0,
+    "target": 36,
+    "path": [
+      0,
+      12,
+      8,
+      36
+    ],
+    "vulnerabilities": [
+      {
+        "host_id": 0,
+        "vulnerability_id": "h0-v1"
+      },
+      {
+        "host_id": 0,
+        "vulnerability_id": "h0-v2"
+      },
+      {
+        "host_id": 12,
+        "vulnerability_id": "h12-v1"
+      },
+      {
+        "host_id": 12,
+        "vulnerability_id": "h12-v2"
+      },
+      {
+        "host_id": 8,
+        "vulnerability_id": "h8-v1"
+      },
+      {
+        "host_id": 8,
+        "vulnerability_id": "h8-v2"
+      },
+      {
+        "host_id": 36,
+        "vulnerability_id": "h36-v1"
+      },
+      {
+        "host_id": 36,
+        "vulnerability_id": "h36-v2"
+      }
+    ]
+  },
+  {
+    "entry_point": 0,
+    "target": 37,
+    "path": [
+      0,
+      29,
+      37
+    ],
+    "vulnerabilities": [
+      {
+        "host_id": 0,
+        "vulnerability_id": "h0-v1"
+      },
+      {
+        "host_id": 0,
+        "vulnerability_id": "h0-v2"
+      },
+      {
+        "host_id": 29,
+        "vulnerability_id": "h29-v1"
+      },
+      {
+        "host_id": 29,
+        "vulnerability_id": "h29-v2"
+      },
+      {
+        "host_id": 37,
+        "vulnerability_id": "h37-v1"
+      },
+      {
+        "host_id": 37,
+        "vulnerability_id": "h37-v2"
+      }
+    ]
+  },
+  {
+    "entry_point": 0,
+    "target": 38,
+    "path": [
+      0,
+      12,
+      35,
+      38
+    ],
+    "vulnerabilities": [
+      {
+        "host_id": 0,
+        "vulnerability_id": "h0-v1"
+      },
+      {
+        "host_id": 0,
+        "vulnerability_id": "h0-v2"
+      },
+      {
+        "host_id": 12,
+        "vulnerability_id": "h12-v1"
+      },
+      {
+        "host_id": 12,
+        "vulnerability_id": "h12-v2"
+      },
+      {
+        "host_id": 35,
+        "vulnerability_id": "h35-v1"
+      },
+      {
+        "host_id": 35,
+        "vulnerability_id": "h35-v2"
+      },
+      {
+        "host_id": 38,
+        "vulnerability_id": "h38-v1"
+      },
+      {
+        "host_id": 38,
+        "vulnerability_id": "h38-v2"
+      }
+    ]
+  },
+  {
+    "entry_point": 0,
+    "target": 39,
+    "path": [
+      0,
+      29,
+      39
+    ],
+    "vulnerabilities": [
+      {
+        "host_id": 0,
+        "vulnerability_id": "h0-v1"
+      },
+      {
+        "host_id": 0,
+        "vulnerability_id": "h0-v2"
+      },
+      {
+        "host_id": 29,
+        "vulnerability_id": "h29-v1"
+      },
+      {
+        "host_id": 29,
+        "vulnerability_id": "h29-v2"
+      },
+      {
+        "host_id": 39,
+        "vulnerability_id": "h39-v1"
+      },
+      {
+        "host_id": 39,
+        "vulnerability_id": "h39-v2"
+      }
+    ]
+  },
+  {
+    "entry_point": 1,
+    "target": 35,
+    "path": [
+      1,
+      26,
+      25,
+      10,
+      35
+    ],
+    "vulnerabilities": [
+      {
+        "host_id": 1,
+        "vulnerability_id": "h1-v1"
+      },
+      {
+        "host_id": 1,
+        "vulnerability_id": "h1-v2"
+      },
+      {
+        "host_id": 26,
+        "vulnerability_id": "h26-v1"
+      },
+      {
+        "host_id": 26,
+        "vulnerability_id": "h26-v2"
+      },
+      {
+        "host_id": 25,
+        "vulnerability_id": "h25-v1"
+      },
+      {
+        "host_id": 25,
+        "vulnerability_id": "h25-v2"
+      },
+      {
+        "host_id": 10,
+        "vulnerability_id": "h10-v1"
+      },
+      {
+        "host_id": 10,
+        "vulnerability_id": "h10-v2"
+      },
+      {
+        "host_id": 35,
+        "vulnerability_id": "h35-v1"
+      },
+      {
+        "host_id": 35,
+        "vulnerability_id": "h35-v2"
+      }
+    ]
+  },
+  {
+    "entry_point": 1,
+    "target": 36,
+    "path": [
+      1,
+      26,
+      3,
+      12,
+      8,
+      36
+    ],
+    "vulnerabilities": [
+      {
+        "host_id": 1,
+        "vulnerability_id": "h1-v1"
+      },
+      {
+        "host_id": 1,
+        "vulnerability_id": "h1-v2"
+      },
+      {
+        "host_id": 26,
+        "vulnerability_id": "h26-v1"
+      },
+      {
+        "host_id": 26,
+        "vulnerability_id": "h26-v2"
+      },
+      {
+        "host_id": 3,
+        "vulnerability_id": "h3-v1"
+      },
+      {
+        "host_id": 3,
+        "vulnerability_id": "h3-v2"
+      },
+      {
+        "host_id": 12,
+        "vulnerability_id": "h12-v1"
+      },
+      {
+        "host_id": 12,
+        "vulnerability_id": "h12-v2"
+      },
+      {
+        "host_id": 8,
+        "vulnerability_id": "h8-v1"
+      },
+      {
+        "host_id": 8,
+        "vulnerability_id": "h8-v2"
+      },
+      {
+        "host_id": 36,
+        "vulnerability_id": "h36-v1"
+      },
+      {
+        "host_id": 36,
+        "vulnerability_id": "h36-v2"
+      }
+    ]
+  },
+  {
+    "entry_point": 1,
+    "target": 37,
+    "path": [
+      1,
+      26,
+      29,
+      37
+    ],
+    "vulnerabilities": [
+      {
+        "host_id": 1,
+        "vulnerability_id": "h1-v1"
+      },
+      {
+        "host_id": 1,
+        "vulnerability_id": "h1-v2"
+      },
+      {
+        "host_id": 26,
+        "vulnerability_id": "h26-v1"
+      },
+      {
+        "host_id": 26,
+        "vulnerability_id": "h26-v2"
+      },
+      {
+        "host_id": 29,
+        "vulnerability_id": "h29-v1"
+      },
+      {
+        "host_id": 29,
+        "vulnerability_id": "h29-v2"
+      },
+      {
+        "host_id": 37,
+        "vulnerability_id": "h37-v1"
+      },
+      {
+        "host_id": 37,
+        "vulnerability_id": "h37-v2"
+      }
+    ]
+  },
+  {
+    "entry_point": 1,
+    "target": 38,
+    "path": [
+      1,
+      26,
+      29,
+      37,
+      38
+    ],
+    "vulnerabilities": [
+      {
+        "host_id": 1,
+        "vulnerability_id": "h1-v1"
+      },
+      {
+        "host_id": 1,
+        "vulnerability_id": "h1-v2"
+      },
+      {
+        "host_id": 26,
+        "vulnerability_id": "h26-v1"
+      },
+      {
+        "host_id": 26,
+        "vulnerability_id": "h26-v2"
+      },
+      {
+        "host_id": 29,
+        "vulnerability_id": "h29-v1"
+      },
+      {
+        "host_id": 29,
+        "vulnerability_id": "h29-v2"
+      },
+      {
+        "host_id": 37,
+        "vulnerability_id": "h37-v1"
+      },
+      {
+        "host_id": 37,
+        "vulnerability_id": "h37-v2"
+      },
+      {
+        "host_id": 38,
+        "vulnerability_id": "h38-v1"
+      },
+      {
+        "host_id": 38,
+        "vulnerability_id": "h38-v2"
+      }
+    ]
+  },
+  {
+    "entry_point": 1,
+    "target": 39,
+    "path": [
+      1,
+      26,
+      29,
+      39
+    ],
+    "vulnerabilities": [
+      {
+        "host_id": 1,
+        "vulnerability_id": "h1-v1"
+      },
+      {
+        "host_id": 1,
+        "vulnerability_id": "h1-v2"
+      },
+      {
+        "host_id": 26,
+        "vulnerability_id": "h26-v1"
+      },
+      {
+        "host_id": 26,
+        "vulnerability_id": "h26-v2"
+      },
+      {
+        "host_id": 29,
+        "vulnerability_id": "h29-v1"
+      },
+      {
+        "host_id": 29,
+        "vulnerability_id": "h29-v2"
+      },
+      {
+        "host_id": 39,
+        "vulnerability_id": "h39-v1"
+      },
+      {
+        "host_id": 39,
+        "vulnerability_id": "h39-v2"
+      }
+    ]
+  }
+]

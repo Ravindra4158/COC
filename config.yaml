@@ -1,0 +1,44 @@
+data:
+  raw_dir: data/raw
+  processed_dir: data/processed
+development_instance:
+  enabled: true
+  seed: 20260911
+  topology:
+    node_count: 40
+    edge_probability: 0.09
+    directed: false
+  entry_points: [0, 1]
+  critical_asset_weights:
+    35: 1
+    36: 2
+    37: 3
+    38: 4
+    39: 5
+  vulnerabilities:
+    per_host: 2
+    cvss_min: 3.0
+    cvss_max: 9.8
+    exploit_probability:
+      min: 0.05
+      max: 0.95
+      offset: 2.0
+      divisor: 8.0
+graph:
+  directed: false
+simulation:
+  max_simulations: 4000
+  default_simulations: 2000
+  seed: 20260911
+  max_attack_steps: 50
+scoring:
+  weights:
+    severity: 0.20
+    exploit_probability: 0.20
+    attacker_reachability: 0.20
+    critical_asset_exposure: 0.25
+    graph_importance: 0.15
+optimization:
+  top_k: 10
+  min_patch_value: 0.0
+  patch_simulations: 500

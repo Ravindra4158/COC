@@ -1,0 +1,5 @@
+host_id,name,criticality
+h1,Public Web,0.80
+h2,Application,0.70
+h3,Database,1.00
+h4,Backup,0.90
