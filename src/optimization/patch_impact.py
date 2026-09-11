@@ -1,14 +1,22 @@
+"""Virtual patch evaluation and risk-reduction impact analysis."""
+
+from __future__ import annotations
+
 from collections.abc import Iterable, Mapping
-from hashlib import sha256
 from pathlib import Path
 from typing import Any
 
 import numpy as np
 import pandas as pd
 
+from src.explanation.explainer import generate_recommendation_reason
 from src.simulation.budget import MAX_ATTACK_STEPS, get_simulation_budget
-from src.simulation.monte_carlo import run_baseline_simulation
+from src.simulation.monte_carlo import (
+    evaluate_synchronized_monte_carlo,
+    run_baseline_simulation,
+)
 from .candidate_filter import filter_patch_candidates
+from .ranking import rank_patch_candidates, get_top_10_recommendations
 
 DEFAULT_PATCH_SIMULATIONS = 500
 
@@ -46,10 +54,6 @@ def virtually_patch(vulnerability_id: Any, disabled_vulnerabilities: Iterable[An
     return frozenset(disabled)
 
 
-def _stable_patch_seed(seed: int, vulnerability_id: Any) -> int:
-    return seed
-
-
 def _evaluate_synchronized_patch_values(
     graph,
     vulnerabilities: Any,
@@ -59,103 +63,17 @@ def _evaluate_synchronized_patch_values(
     n_sims: int = 2000,
     seed: int = 42,
 ) -> tuple[float, dict[Any, float]]:
-    """Synchronized Monte Carlo evaluation using common random numbers and deciding votes."""
-    from collections import defaultdict
-    nodes = list(graph.nodes)
-    node_to_idx = {n: i for i, n in enumerate(nodes)}
-    n_nodes = len(nodes)
-    if n_nodes == 0:
-        return 0.0, {vid: 0.0 for vid in candidate_vuln_ids}
-
-    entry_indices = [node_to_idx[e] for e in entry_points if e in node_to_idx]
-    if not entry_indices:
-        return 0.0, {vid: 0.0 for vid in candidate_vuln_ids}
-
-    crit_map = _criticality_map(critical_assets)
-    critical_weights = np.zeros(n_nodes, dtype=float)
-    for asset, weight in crit_map.items():
-        if asset in node_to_idx:
-            critical_weights[node_to_idx[asset]] = float(weight)
-
-    from src.simulation.monte_carlo import _normalise_vulnerabilities
-    vuln_rows = _normalise_vulnerabilities(vulnerabilities)
-    n_v = len(vuln_rows)
-    if n_v == 0:
-        return 0.0, {vid: 0.0 for vid in candidate_vuln_ids}
-
-    probs = np.array([float(r["exploit_probability"]) for r in vuln_rows])
-    vid_to_idx = {r["vuln_id"]: i for i, r in enumerate(vuln_rows)}
-    host_vuln_idx: dict[int, list[int]] = defaultdict(list)
-    for i, r in enumerate(vuln_rows):
-        h_node = r["host_id"]
-        if h_node in node_to_idx:
-            host_vuln_idx[node_to_idx[h_node]].append(i)
-
-    rng = np.random.Generator(np.random.PCG64(seed))
-    draws = rng.random((n_sims, n_v))
-    entries = rng.integers(0, len(entry_indices), size=n_sims)
-    success = draws < probs
-
-    host_ok = np.zeros((n_sims, n_nodes), dtype=bool)
-    for h_idx, idxs in host_vuln_idx.items():
-        host_ok[:, h_idx] = success[:, idxs].any(axis=1)
-
-    adj: list[list[int]] = [[] for _ in range(n_nodes)]
-    is_directed = graph.is_directed()
-    for u in nodes:
-        nbrs = graph.successors(u) if is_directed else graph.neighbors(u)
-        adj[node_to_idx[u]] = [node_to_idx[v] for v in nbrs if v in node_to_idx]
-
-    def _bfs_risk(t: int, mask: np.ndarray) -> float:
-        entry = entry_indices[entries[t]]
-        comp = {entry}
-        queue = [entry]
-        qi = 0
-        while qi < len(queue):
-            u = queue[qi]
-            qi += 1
-            for nb in adj[u]:
-                if nb not in comp and mask[nb]:
-                    comp.add(nb)
-                    queue.append(nb)
-        return float(sum(critical_weights[c] for c in comp if critical_weights[c] > 0))
-
-    baseline_risks = np.empty(n_sims)
-    for t in range(n_sims):
-        baseline_risks[t] = _bfs_risk(t, host_ok[t])
-    baseline_risk = float(baseline_risks.mean())
-
-    deciding = np.zeros((n_sims, n_v), dtype=bool)
-    for h_idx, idxs in host_vuln_idx.items():
-        for vi in idxs:
-            others = [j for j in idxs if j != vi]
-            w = success[:, others].any(axis=1) if others else np.zeros(n_sims, dtype=bool)
-            deciding[:, vi] = host_ok[:, h_idx] & ~w
-
-    patch_values: dict[Any, float] = {}
-    entry_set = set(entry_indices)
-    for vid in candidate_vuln_ids:
-        if vid not in vid_to_idx:
-            patch_values[vid] = 0.0
-            continue
-        vi = vid_to_idx[vid]
-        r = vuln_rows[vi]
-        h_idx = node_to_idx.get(r["host_id"])
-        if h_idx in entry_set:
-            patch_values[vid] = 0.0
-            continue
-        affected = np.where(deciding[:, vi])[0]
-        if len(affected) == 0:
-            patch_values[vid] = 0.0
-            continue
-        patched_risks = baseline_risks.copy()
-        for t in affected:
-            mask = host_ok[t].copy()
-            mask[h_idx] = False
-            patched_risks[t] = _bfs_risk(t, mask)
-        patch_values[vid] = max(0.0, baseline_risk - float(patched_risks.mean()))
-
-    return baseline_risk, patch_values
+    """Synchronized Monte Carlo evaluation delegating to the unified simulation engine."""
+    res = evaluate_synchronized_monte_carlo(
+        graph=graph,
+        vulnerabilities=vulnerabilities,
+        entry_points=entry_points,
+        critical_assets=critical_assets,
+        candidate_vuln_ids=candidate_vuln_ids,
+        n_sims=n_sims,
+        seed=seed,
+    )
+    return res.baseline_risk, res.patch_values
 
 
 def evaluate_patch_impact(
@@ -203,6 +121,7 @@ def evaluate_patch_impact(
         cost = float(candidate["patch_cost"])
         if cost > 0:
             result["patch_efficiency"] = patch_value / cost
+    result["reason"] = generate_recommendation_reason(result)
     return result
 
 
@@ -240,15 +159,17 @@ def evaluate_all_patch_impacts(
     path_data = {item["host_id"]: item for item in (graph_analysis or {}).get("choke_points", [])}
 
     candidate_ids = {c.get("vulnerability_id", c.get("vuln_id")) for c in candidates}
-    baseline_risk, sync_patch_values = _evaluate_synchronized_patch_values(
-        graph,
-        vulnerabilities,
-        entry_points,
-        critical_assets,
-        candidate_ids,
+    sync_result = evaluate_synchronized_monte_carlo(
+        graph=graph,
+        vulnerabilities=vulnerabilities,
+        entry_points=entry_points,
+        critical_assets=critical_assets,
+        candidate_vuln_ids=candidate_ids,
         n_sims=sim_budget,
         seed=baseline_seed,
     )
+    baseline_risk = sync_result.baseline_risk
+    sync_patch_values = sync_result.patch_values
 
     evaluated = []
     for candidate in candidates:
@@ -269,6 +190,7 @@ def evaluate_all_patch_impacts(
                 "risk_after": risk_after,
                 "patch_value": pv,
                 "risk_reduction_percent": reduc_pct,
+                "individual_enablement": sync_result.vulnerability_enablement.get(vid, candidate.get("individual_enablement", 0.0)),
                 "critical_assets_affected": list(candidate.get("critical_assets_affected", [])),
                 "attack_path_count": int(candidate.get("path_frequency", 0)),
                 "patch_priority_score": pv,
@@ -277,11 +199,11 @@ def evaluate_all_patch_impacts(
                 cost = float(candidate["patch_cost"])
                 if cost > 0:
                     res["patch_efficiency"] = pv / cost
+            res["reason"] = generate_recommendation_reason(res)
             evaluated.append(res)
         else:
             evaluated.append(evaluate_patch_impact(candidate, baseline_result, graph, vulnerabilities, entry_points, critical_assets, patch_simulations, MAX_ATTACK_STEPS))
 
-    from .ranking import rank_patch_candidates, get_top_10_recommendations
     ranked = rank_patch_candidates(evaluated)
     top10 = get_top_10_recommendations(ranked, top_k=top_k)
     if output_path is not None:

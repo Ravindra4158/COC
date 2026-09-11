@@ -4,21 +4,23 @@ from typing import Any
 import networkx as nx
 
 
-def is_reachable(graph: nx.DiGraph, source: Any, target: Any) -> bool:
+def is_reachable(graph: nx.DiGraph | nx.Graph, source: Any, target: Any) -> bool:
     """Return whether target can be reached from source, including source == target."""
     if source not in graph or target not in graph:
         return False
     return nx.has_path(graph, source, target)
 
 
-def get_reachable_nodes(graph: nx.DiGraph, source: Any) -> set[Any]:
+def get_reachable_nodes(graph: nx.DiGraph | nx.Graph, source: Any) -> set[Any]:
     """Return source and every node reachable from it."""
     if source not in graph:
         return set()
-    return {source} | nx.descendants(graph, source)
+    if graph.is_directed():
+        return {source} | nx.descendants(graph, source)
+    return set(nx.node_connected_component(graph, source)) if source in graph else set()
 
 
-def get_reachable_nodes_from_entries(graph: nx.DiGraph, entry_points: Iterable[Any]) -> set[Any]:
+def get_reachable_nodes_from_entries(graph: nx.DiGraph | nx.Graph, entry_points: Iterable[Any]) -> set[Any]:
     """Return the union of nodes reachable from all entry points."""
     reachable = set()
     for entry_point in entry_points:
@@ -27,7 +29,7 @@ def get_reachable_nodes_from_entries(graph: nx.DiGraph, entry_points: Iterable[A
 
 
 def get_paths_to_target(
-    graph: nx.DiGraph,
+    graph: nx.DiGraph | nx.Graph,
     source: Any,
     target: Any,
     max_path_length: int | None = 10,
@@ -45,8 +47,8 @@ def get_paths_to_target(
     return result
 
 
-def get_shortest_path(graph: nx.DiGraph, source: Any, target: Any) -> list[Any] | None:
-    """Return the shortest directed path, or None when no path exists."""
+def get_shortest_path(graph: nx.DiGraph | nx.Graph, source: Any, target: Any) -> list[Any] | None:
+    """Return the shortest directed/undirected path, or None when no path exists."""
     if source not in graph or target not in graph:
         return None
     try:
@@ -56,7 +58,7 @@ def get_shortest_path(graph: nx.DiGraph, source: Any, target: Any) -> list[Any] 
 
 
 def get_reachable_critical_assets(
-    graph: nx.DiGraph,
+    graph: nx.DiGraph | nx.Graph,
     entry_points: Iterable[Any],
     critical_assets: Iterable[Any],
 ) -> dict[Any, bool]:
@@ -66,7 +68,7 @@ def get_reachable_critical_assets(
 
 
 def find_attack_paths(
-    graph: nx.DiGraph,
+    graph: nx.DiGraph | nx.Graph,
     entry_points: Iterable[Any],
     critical_assets: Iterable[Any],
     max_path_length: int | None = 10,
@@ -86,7 +88,7 @@ def find_attack_paths(
     return paths
 
 
-def get_shortest_attack_path(graph: nx.DiGraph, entry_point: Any, critical_asset: Any) -> dict[str, Any] | None:
+def get_shortest_attack_path(graph: nx.DiGraph | nx.Graph, entry_point: Any, critical_asset: Any) -> dict[str, Any] | None:
     """Return a structured shortest attack path, or None when unreachable."""
     path = get_shortest_path(graph, entry_point, critical_asset)
     if path is None:
@@ -95,7 +97,7 @@ def get_shortest_attack_path(graph: nx.DiGraph, entry_point: Any, critical_asset
 
 
 def get_paths_to_critical_assets(
-    graph: nx.DiGraph,
+    graph: nx.DiGraph | nx.Graph,
     entry_point: Any,
     critical_assets: Iterable[Any],
     max_path_length: int | None = 10,
@@ -105,7 +107,7 @@ def get_paths_to_critical_assets(
     return find_attack_paths(graph, [entry_point], critical_assets, max_path_length, max_paths_per_target)
 
 
-def get_vulnerabilities_on_path(graph: nx.DiGraph, path: Iterable[Any]) -> list[dict[str, Any]]:
+def get_vulnerabilities_on_path(graph: nx.DiGraph | nx.Graph, path: Iterable[Any]) -> list[dict[str, Any]]:
     """Return vulnerability IDs attached to hosts on a path."""
     vulnerabilities = []
     for host_id in path:
@@ -114,9 +116,38 @@ def get_vulnerabilities_on_path(graph: nx.DiGraph, path: Iterable[Any]) -> list[
     return vulnerabilities
 
 
-def get_vulnerabilities_on_attack_paths(graph: nx.DiGraph, attack_paths: Iterable[dict[str, Any]]) -> list[dict[str, Any]]:
+def get_vulnerabilities_on_attack_paths(graph: nx.DiGraph | nx.Graph, attack_paths: Iterable[dict[str, Any]]) -> list[dict[str, Any]]:
     """Copy attack-path records and add their path vulnerability associations."""
     return [
         {**attack_path, "vulnerabilities": get_vulnerabilities_on_path(graph, attack_path["path"])}
         for attack_path in attack_paths
     ]
+
+
+def find_path_through_host(
+    graph: nx.DiGraph | nx.Graph,
+    host_id: Any,
+    entry_points: Iterable[Any],
+    critical_assets: Iterable[Any],
+) -> list[Any]:
+    """Construct a simple entry-to-critical path that includes ``host_id``.
+
+    Removing the pre-host segment before finding the continuation guarantees that
+    reported paths do not repeat nodes. Empty means no valid witness exists.
+    """
+    for entry_point in entry_points:
+        for critical_asset in critical_assets:
+            try:
+                entry_to_host = nx.shortest_path(graph, entry_point, host_id)
+            except (nx.NetworkXNoPath, nx.NodeNotFound):
+                continue
+            available = graph.copy()
+            available.remove_nodes_from(entry_to_host[:-1])
+            if critical_asset not in available:
+                continue
+            try:
+                continuation = nx.shortest_path(available, host_id, critical_asset)
+            except (nx.NetworkXNoPath, nx.NodeNotFound):
+                continue
+            return entry_to_host + continuation[1:]
+    return []

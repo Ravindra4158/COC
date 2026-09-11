@@ -1,8 +1,10 @@
+from collections import defaultdict
 from collections.abc import Iterable, Mapping
 from pathlib import Path
 from typing import Any
 
 import networkx as nx
+import numpy as np
 import pandas as pd
 
 from src.graph.analysis import analyze_attack_graph
@@ -48,7 +50,7 @@ def _simulation_field(simulation_result: Any | None, field: str, default: Any) -
     return getattr(simulation_result, field, default)
 
 
-def _criticality_map(graph: nx.DiGraph, critical_assets: Any) -> dict[Any, float]:
+def _criticality_map(graph: nx.DiGraph | nx.Graph, critical_assets: Any) -> dict[Any, float]:
     if hasattr(critical_assets, "to_dict"):
         result = {}
         for row in critical_assets.to_dict("records"):
@@ -96,7 +98,7 @@ def calculate_priority_score(
 
 
 def score_all_vulnerabilities(
-    graph: nx.DiGraph,
+    graph: nx.DiGraph | nx.Graph,
     vulnerabilities: Any,
     hosts: Any,
     entry_points: Iterable[Any],
@@ -106,7 +108,7 @@ def score_all_vulnerabilities(
     weights: Mapping[str, float] | None = None,
     output_path: str | Path | None = "output/ranked_vulnerabilities.csv",
 ) -> pd.DataFrame:
-    """Score and rank every host-vulnerability pair without running simulation."""
+    """Score and rank every host-vulnerability pair with attack-path awareness."""
     vulnerability_rows = _rows(vulnerabilities)
     host_ids = set(hosts["host_id"]) if hasattr(hosts, "columns") else set(hosts)
     if set(graph.nodes) != host_ids:
@@ -120,6 +122,11 @@ def score_all_vulnerabilities(
     max_asset_count = max((item["reachable_critical_asset_count"] for item in features.values()), default=0)
     host_statistics = _simulation_field(simulation_result, "host_statistics", {})
     asset_probabilities = _simulation_field(simulation_result, "critical_asset_probabilities", {})
+
+    host_vulns_map = defaultdict(list)
+    for v in vulnerability_rows:
+        host_vulns_map[v["host_id"]].append(v)
+
     results = []
     for vulnerability in vulnerability_rows:
         host_id = vulnerability["host_id"]
@@ -130,6 +137,15 @@ def score_all_vulnerabilities(
             raise ValueError("each vulnerability requires vuln_id or vulnerability_id")
         row_features = features.get(host_id, {"distance_from_entry": None, "distance_to_nearest_critical_asset": None, "reachable_critical_assets": [], "reachable_critical_asset_count": 0})
         exploit_probability = get_exploit_probability(vulnerability)
+
+        # Compute marginal enablement ΔP_comp (probability this vuln alone opens host)
+        siblings = [
+            o for o in host_vulns_map[host_id]
+            if o.get("vulnerability_id", o.get("vuln_id")) != vulnerability_id
+        ]
+        sibling_fail = float(np.prod([1.0 - get_exploit_probability(s) for s in siblings])) if siblings else 1.0
+        individual_enablement = exploit_probability * sibling_fail
+
         attacker_reachability, distance_from_entry = calculate_attacker_reachability(graph, host_id, entry_points, analysis["host_features"])
         downstream = row_features["reachable_critical_assets"]
         asset_exposure, asset_criticality = calculate_asset_impact(graph, host_id, criticality_map, downstream, row_features["distance_to_nearest_critical_asset"], simulation_result)
@@ -137,6 +153,7 @@ def score_all_vulnerabilities(
         graph_importance = 0.5 * normalize_count(path_frequency, max_path_frequency) + 0.5 * normalize_count(row_features["reachable_critical_asset_count"], max_asset_count)
         host_stat = host_statistics.get(host_id, {})
         monte_carlo_asset_probability = max((float(asset_probabilities.get(asset, 0.0)) for asset in downstream), default=0.0)
+
         results.append({
             "host_id": host_id,
             "vulnerability_id": vulnerability_id,
@@ -144,6 +161,8 @@ def score_all_vulnerabilities(
             "cvss": float(vulnerability["cvss"]),
             "normalized_cvss": normalize_cvss(vulnerability["cvss"]),
             "exploit_probability": exploit_probability,
+            "individual_enablement": round(individual_enablement, 6),
+            "marginal_enablement": round(individual_enablement, 6),
             "attacker_reachability": attacker_reachability,
             "distance_from_entry": distance_from_entry,
             "critical_asset_exposure": asset_exposure,
@@ -155,10 +174,12 @@ def score_all_vulnerabilities(
             "monte_carlo_host_compromise_probability": float(host_stat.get("compromise_probability", 0.0)),
             "monte_carlo_critical_asset_probability": monte_carlo_asset_probability,
         })
+
     for result in results:
         result["priority_score"] = calculate_priority_score(
             result["normalized_cvss"], result["exploit_probability"], result["attacker_reachability"], result["critical_asset_exposure"], result["graph_importance"], weights
         )
+
     frame = pd.DataFrame(results)
     if frame.empty:
         frame["rank"] = pd.Series(dtype="int64")
