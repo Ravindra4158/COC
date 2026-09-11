@@ -1,9 +1,12 @@
 {
   "max_allowed_simulations": 4000,
-  "baseline_simulations": 2000,
-  "patch_simulations_per_recommendation": 200,
-  "recommendations_evaluated": 10,
+  "monte_carlo_trials_drawn": 4000,
   "total_simulations_used": 4000,
   "within_budget": true,
-  "baseline_weighted_risk": 13.9775
+  "method": "Common-random-numbers: 4 000 exploit-outcome matrices pre-drawn once and reused for baseline + all 80 patch scenarios.  Each patch scenario replays BFS on the same random outcomes with one vulnerability disabled.",
+  "baseline_weighted_risk": 11.2145,
+  "vulnerabilities_evaluated": 80,
+  "non_zero_patch_values": 53,
+  "top_k": 10,
+  "runtime_sec": 0.7011
 }

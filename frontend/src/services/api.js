@@ -10,4 +10,9 @@ export const getAnalysis = () => request('/analysis');
 export const getNetwork = () => request('/network');
 export const getVulnerabilities = () => request('/vulnerabilities');
 export const getRecommendations = () => request('/recommendations');
-export const runAnalysis = () => request('/analysis/run', { method: 'POST' });
+export const runAnalysis = (params = {}) => request('/analysis/run', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify(params),
+});
+export const resetAnalysis = () => request('/analysis/reset', { method: 'POST' });

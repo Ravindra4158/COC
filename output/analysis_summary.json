@@ -9,6 +9,8 @@
   "stage_2_simulations": 1998,
   "candidate_count": 74,
   "top10_count": 10,
-  "baseline_risk": 11.297,
-  "runtime_seconds": 1.4514
+  "baseline_risk": 14.6035,
+  "active_patches": [],
+  "active_seed": 20260911,
+  "runtime_seconds": 0.6509
 }

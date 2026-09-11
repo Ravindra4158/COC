@@ -19,6 +19,8 @@ class AnalysisSummary(BaseModel):
     total_simulations: int = 0
     candidate_count: int = 0
     attack_paths: int = 0
+    active_patches: list[str] = Field(default_factory=list)
+    active_seed: int | None = None
     updated_at: str | None = None
 
 
@@ -65,6 +67,13 @@ class ItemsResponse(BaseModel):
     items: list[dict[str, Any]]
 
 
+class RunAnalysisRequest(BaseModel):
+    disabled_vulnerabilities: list[str] = Field(default_factory=list)
+    seed: int | None = None
+
+
 class RefreshResponse(BaseModel):
     status: str
     message: str
+    active_patches: list[str] = Field(default_factory=list)
+    active_seed: int | None = None

@@ -1,241 +1,382 @@
-"""Budgeted, graph-aware vulnerability ranking for the supplied development instance.
+"""Graph-aware vulnerability ranking with synchronized Monte Carlo.
 
-Run from this directory or any working directory.  The only random generators used
-for graph/finding generation and simulation are deterministic for the stated seed.
+Run:  python rank_vulnerabilities.py
+
+Strategy
+--------
+1.  Pre-draw 4 000 random exploit-outcome matrices (one per trial).
+2.  Compute baseline weighted critical-asset risk via BFS on the
+    "exploitable" subgraph for every trial.
+3.  For each of the 80 vulnerability–host pairs, compute patch value by
+    re-running BFS on the *same* random draws with that single
+    vulnerability disabled.  Because the random outcomes are identical,
+    the paired difference isolates the causal effect of the patch with
+    near-zero variance — no additional simulation budget required.
+4.  Rank by measured patch value; output top-10 with paths and
+    explanations.
+
+Simulation budget: 4 000 Monte Carlo trials (pre-drawn).
 """
 
 from __future__ import annotations
 
 import csv
 import json
-from dataclasses import asdict, dataclass
+from collections import defaultdict
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Iterable
+from time import perf_counter
 
 import networkx as nx
 import numpy as np
 
-
-SEED = 20260911
-N_HOSTS = 40
-EDGE_PROBABILITY = 0.09
-ENTRY_NODES = (0, 1)
+# ── Instance parameters ──────────────────────────────────────────────────────
+SEED             = 20260911
+N_HOSTS          = 40
+EDGE_PROB        = 0.09
+ENTRY_NODES      = [0, 1]
 CRITICAL_WEIGHTS = {35: 1, 36: 2, 37: 3, 38: 4, 39: 5}
-MAX_SIMULATIONS = 4000
-BASELINE_SIMULATIONS = 2000
-PATCH_SIMULATIONS_PER_ITEM = 200
-TOP_K = 10
+VULNS_PER_HOST   = 2
+CVSS_MIN         = 3.0
+CVSS_MAX         = 9.8
+N_SIMULATIONS    = 4_000
+TOP_K            = 10
 
+
+# ── Data structures ──────────────────────────────────────────────────────────
 
 @dataclass(frozen=True)
-class Finding:
-    vulnerability_id: str
-    host_id: int
+class Vuln:
+    vid: str
+    host: int
     cvss: float
-    exploit_probability: float
+    prob: float  # exploit probability
 
 
-def build_development_graph() -> nx.Graph:
-    """Create the exact specified graph and deterministically join components."""
-    graph = nx.gnp_random_graph(N_HOSTS, EDGE_PROBABILITY, seed=SEED, directed=False)
-    components = sorted((sorted(component) for component in nx.connected_components(graph)), key=lambda c: c[0])
-    for left, right in zip(components, components[1:]):
-        graph.add_edge(left[0], right[0])
-    return graph
+# ── 1. Graph construction ────────────────────────────────────────────────────
+
+def build_graph() -> nx.Graph:
+    """Build the development instance graph, joining disconnected components."""
+    G = nx.gnp_random_graph(N_HOSTS, EDGE_PROB, seed=SEED, directed=False)
+    comps = sorted(
+        (sorted(c) for c in nx.connected_components(G)),
+        key=lambda c: c[0],
+    )
+    for left, right in zip(comps, comps[1:]):
+        G.add_edge(left[0], right[0])
+    return G
 
 
-def build_findings() -> list[Finding]:
+# ── 2. Vulnerability generation ──────────────────────────────────────────────
+
+def build_vulns() -> list[Vuln]:
+    """Generate two vulnerabilities per host with deterministic CVSS and p."""
     rng = np.random.Generator(np.random.PCG64(SEED))
-    findings: list[Finding] = []
-    for host_id in range(N_HOSTS):
-        for index in range(2):
-            cvss = float(rng.uniform(3.0, 9.8))
-            probability = min(0.95, max(0.05, (cvss - 2.0) / 8.0))
-            findings.append(Finding(f"h{host_id}-v{index + 1}", host_id, cvss, probability))
-    return findings
+    out: list[Vuln] = []
+    for h in range(N_HOSTS):
+        for k in range(1, VULNS_PER_HOST + 1):
+            s = float(rng.uniform(CVSS_MIN, CVSS_MAX))
+            p = min(0.95, max(0.05, (s - 2.0) / 8.0))
+            out.append(Vuln(f"h{h}-v{k}", h, round(s, 6), round(p, 6)))
+    return out
 
 
-def findings_by_host(findings: Iterable[Finding]) -> dict[int, list[Finding]]:
-    grouped = {host: [] for host in range(N_HOSTS)}
-    for finding in findings:
-        grouped[finding.host_id].append(finding)
-    return grouped
+# ── 3. Synchronized Monte Carlo ──────────────────────────────────────────────
 
-
-def host_compromise_probability(host_findings: list[Finding], patched: str | None = None) -> float:
-    """Probability that at least one unpatched finding enables entry to this host."""
-    failure_probability = 1.0
-    for finding in host_findings:
-        if finding.vulnerability_id != patched:
-            failure_probability *= 1.0 - finding.exploit_probability
-    return 1.0 - failure_probability
-
-
-def simulate_risk(
+def evaluate_all(
     graph: nx.Graph,
-    grouped: dict[int, list[Finding]],
-    trials: int,
-    seed: int,
-    patched: str | None = None,
-) -> float:
-    """Estimate weighted critical reachability under independent exploit attempts.
+    vulns: list[Vuln],
+    n_sims: int = N_SIMULATIONS,
+    seed: int = SEED,
+) -> tuple[float, dict[str, float], np.ndarray]:
+    """Return (baseline_risk, {vuln_id: patch_value}, baseline_per_trial).
 
-    Every trial selects one entry uniformly. An unvisited neighboring host is entered
-    when either of its unpatched vulnerabilities succeeds; it is attempted once.
+    Uses common-random-numbers: all 4 000 random exploit outcomes are
+    drawn once and reused for every patch scenario.
     """
     rng = np.random.Generator(np.random.PCG64(seed))
-    total_risk = 0.0
-    for _ in range(trials):
-        entry = int(rng.choice(ENTRY_NODES))
-        reached = {entry}
-        frontier = [entry]
-        while frontier:
-            source = frontier.pop()
-            for target in graph.neighbors(source):
-                if target in reached:
-                    continue
-                vulnerable = [v for v in grouped[target] if v.vulnerability_id != patched]
-                succeeds = any(rng.random() < finding.exploit_probability for finding in vulnerable)
-                if succeeds:
-                    reached.add(target)
-                    frontier.append(target)
-        total_risk += sum(weight for node, weight in CRITICAL_WEIGHTS.items() if node in reached)
-    return total_risk / trials
+    n_v = len(vulns)
+
+    # ── Pre-draw all randomness ──────────────────────────────────────────
+    draws   = rng.random((n_sims, n_v))                               # exploit rolls
+    entries = rng.integers(0, len(ENTRY_NODES), size=n_sims)           # entry selection
+
+    # ── Exploit success per (trial, vuln) ────────────────────────────────
+    probs   = np.array([v.prob for v in vulns])
+    success = draws < probs                                            # (n_sims, n_v)
+
+    # ── Per-host exploitability ──────────────────────────────────────────
+    host_vuln_idx: dict[int, list[int]] = defaultdict(list)
+    for i, v in enumerate(vulns):
+        host_vuln_idx[v.host].append(i)
+
+    host_ok = np.zeros((n_sims, N_HOSTS), dtype=bool)
+    for h, idxs in host_vuln_idx.items():
+        host_ok[:, h] = success[:, idxs].any(axis=1)
+
+    # ── Adjacency list ───────────────────────────────────────────────────
+    adj: list[list[int]] = [[] for _ in range(N_HOSTS)]
+    for u, v in graph.edges():
+        adj[u].append(v)
+        adj[v].append(u)
+
+    # ── BFS helper ───────────────────────────────────────────────────────
+    def _bfs_risk(trial: int, mask: np.ndarray) -> float:
+        """Single-trial BFS flood → weighted critical-asset risk."""
+        entry = ENTRY_NODES[entries[trial]]
+        comp = set()
+        comp.add(entry)
+        queue = [entry]
+        qi = 0
+        while qi < len(queue):
+            u = queue[qi]; qi += 1
+            for nb in adj[u]:
+                if nb not in comp and mask[nb]:
+                    comp.add(nb)
+                    queue.append(nb)
+        return sum(w for c, w in CRITICAL_WEIGHTS.items() if c in comp)
+
+    # ── Baseline risk ────────────────────────────────────────────────────
+    baseline_risks = np.empty(n_sims)
+    for t in range(n_sims):
+        baseline_risks[t] = _bfs_risk(t, host_ok[t])
+    baseline_risk = float(baseline_risks.mean())
+
+    # ── Deciding-vote mask per vuln ──────────────────────────────────────
+    # deciding[t, vi] = True ⟺ host is exploitable ONLY because of vi
+    deciding  = np.zeros((n_sims, n_v), dtype=bool)
+    without_v: dict[int, np.ndarray] = {}
+
+    for h, idxs in host_vuln_idx.items():
+        for vi in idxs:
+            others = [j for j in idxs if j != vi]
+            w = success[:, others].any(axis=1) if others else np.zeros(n_sims, dtype=bool)
+            without_v[vi] = w
+            deciding[:, vi] = host_ok[:, h] & ~w
+
+    # ── Patch evaluation (reuses the same random draws) ──────────────────
+    patch_values: dict[str, float] = {}
+    for vi, v in enumerate(vulns):
+        if v.host in ENTRY_NODES:
+            # Entry nodes are compromised without exploitation.
+            patch_values[v.vid] = 0.0
+            continue
+
+        affected = np.where(deciding[:, vi])[0]
+        if len(affected) == 0:
+            patch_values[v.vid] = 0.0
+            continue
+
+        patched_risks = baseline_risks.copy()
+        for t in affected:
+            mask = host_ok[t].copy()
+            mask[v.host] = False  # deciding ⟹ without_v[vi][t] is False
+            patched_risks[t] = _bfs_risk(t, mask)
+
+        patch_values[v.vid] = max(0.0, baseline_risk - float(patched_risks.mean()))
+
+    return baseline_risk, patch_values, baseline_risks
 
 
-def valid_path_through_host(graph: nx.Graph, host: int) -> list[int] | None:
-    """Return a simple entry-to-critical path containing host, if one exists."""
+# ── 4. Path finder ───────────────────────────────────────────────────────────
+
+def find_path(graph: nx.Graph, host: int) -> list[int] | None:
+    """Return a simple entry → host → critical-asset path, or None."""
     for entry in ENTRY_NODES:
-        for critical in CRITICAL_WEIGHTS:
-            entry_to_host = nx.shortest_path(graph, entry, host)
-            # A continuation may not reuse any pre-host node: this makes the
-            # concatenation a valid simple entry-to-critical path by construction.
-            available = graph.copy()
-            available.remove_nodes_from(entry_to_host[:-1])
-            if critical in available and nx.has_path(available, host, critical):
-                return entry_to_host + nx.shortest_path(available, host, critical)[1:]
+        try:
+            seg1 = nx.shortest_path(graph, entry, host)
+        except nx.NetworkXNoPath:
+            continue
+        sub = graph.copy()
+        sub.remove_nodes_from(seg1[:-1])          # keep host, remove prior nodes
+        for crit in sorted(CRITICAL_WEIGHTS, key=lambda c: CRITICAL_WEIGHTS[c], reverse=True):
+            if crit not in sub:
+                continue
+            try:
+                seg2 = nx.shortest_path(sub, host, crit)
+                return seg1 + seg2[1:]
+            except nx.NetworkXNoPath:
+                continue
     return None
 
 
-def graph_aware_rows(graph: nx.Graph, findings: list[Finding]) -> list[dict]:
-    grouped = findings_by_host(findings)
-    rows: list[dict] = []
-    for finding in findings:
-        host = finding.host_id
-        path = valid_path_through_host(graph, host)
-        entry_distance = min(nx.shortest_path_length(graph, entry, host) for entry in ENTRY_NODES)
-        critical_distances = {asset: nx.shortest_path_length(graph, host, asset) for asset in CRITICAL_WEIGHTS}
-        nearest_asset_distance = min(critical_distances.values())
-        # A simple host-specific reachability proxy, attenuated with distance from
-        # each entry. This is deliberately independent of patch simulations.
-        entry_reachability = max(1.0 / (1.0 + nx.shortest_path_length(graph, entry, host)) for entry in ENTRY_NODES)
-        sibling_failure = float(np.prod([
-            1.0 - other.exploit_probability
-            for other in grouped[host]
-            if other.vulnerability_id != finding.vulnerability_id
-        ]))
-        individual_enablement = finding.exploit_probability * sibling_failure
-        downstream_weight = max(
-            weight / (1.0 + critical_distances[asset]) for asset, weight in CRITICAL_WEIGHTS.items()
-        )
-        structural_score = entry_reachability * individual_enablement * downstream_weight
-        # An attacker starts on an entry node, so a finding on that node is not
-        # required to traverse into it under the stated traversal model.
-        if host in ENTRY_NODES:
-            structural_score = 0.0
-        if path is None:
-            structural_score = 0.0
-        rows.append({
-            "vulnerability_id": finding.vulnerability_id,
-            "host_id": host,
-            "cvss": round(finding.cvss, 6),
-            "exploit_probability": round(finding.exploit_probability, 6),
-            "entry_distance": entry_distance,
-            "nearest_critical_distance": nearest_asset_distance,
-            "individual_enablement": round(individual_enablement, 8),
-            "structural_priority_score": round(structural_score, 8),
-            "associated_path": path or [],
-        })
-    return sorted(rows, key=lambda row: (-row["structural_priority_score"], -row["cvss"], row["vulnerability_id"]))
-
-
-def write_outputs(rows: list[dict], baseline_risk: float, patch_results: dict[str, float], output_dir: Path) -> None:
-    output_dir.mkdir(parents=True, exist_ok=True)
-    rank_lookup = {row["vulnerability_id"]: rank for rank, row in enumerate(rows, start=1)}
-    ranked_rows = []
-    for row in rows:
-        item = dict(row)
-        item["rank"] = rank_lookup[item["vulnerability_id"]]
-        item["estimated_risk_reduction_fraction"] = round(patch_results.get(item["vulnerability_id"], item["structural_priority_score"]), 8)
-        item["estimated_risk_reduction_percent"] = round(100 * item["estimated_risk_reduction_fraction"], 4)
-        item["associated_path"] = " -> ".join(map(str, item["associated_path"]))
-        ranked_rows.append(item)
-    fieldnames = list(ranked_rows[0])
-    with (output_dir / "ranked_vulnerabilities.csv").open("w", newline="", encoding="utf-8") as handle:
-        writer = csv.DictWriter(handle, fieldnames=fieldnames)
-        writer.writeheader()
-        writer.writerows(ranked_rows)
-
-    plan = []
-    for row in rows[:TOP_K]:
-        reduction = patch_results[row["vulnerability_id"]]
-        plan.append({
-            "rank": rank_lookup[row["vulnerability_id"]],
-            "vulnerability_id": row["vulnerability_id"],
-            "host_id": row["host_id"],
-            "cvss": row["cvss"],
-            "associated_attacker_entry_to_critical_asset_path": row["associated_path"],
-            "baseline_weighted_risk": round(baseline_risk, 6),
-            "patched_weighted_risk": round(baseline_risk * (1.0 - reduction), 6),
-            "estimated_risk_reduction_fraction": round(reduction, 6),
-            "estimated_risk_reduction_percent": round(100 * reduction, 4),
-            "explanation": (
-                f"{row['vulnerability_id']} contributes individual host enablement {row['individual_enablement']:.4f}; "
-                f"it lies on {row['associated_path']} and patching it reduced simulated weighted critical risk by {100 * reduction:.2f}%."
-            ),
-        })
-    (output_dir / "top10_patch_plan.json").write_text(json.dumps(plan, indent=2), encoding="utf-8")
-
-    used = BASELINE_SIMULATIONS + TOP_K * PATCH_SIMULATIONS_PER_ITEM
-    report = {
-        "max_allowed_simulations": MAX_SIMULATIONS,
-        "baseline_simulations": BASELINE_SIMULATIONS,
-        "patch_simulations_per_recommendation": PATCH_SIMULATIONS_PER_ITEM,
-        "recommendations_evaluated": TOP_K,
-        "total_simulations_used": used,
-        "within_budget": used <= MAX_SIMULATIONS,
-        "baseline_weighted_risk": round(baseline_risk, 6),
-    }
-    (output_dir / "simulation_report.json").write_text(json.dumps(report, indent=2), encoding="utf-8")
-
-    lines = ["# Technical explanations", "", "The ten recommendations below have a valid attacker-entry-to-critical-asset path and a numerical, budgeted Monte Carlo patch estimate.", ""]
-    for item in plan:
-        lines.extend([
-            f"## {item['rank']}. {item['vulnerability_id']} on host {item['host_id']}",
-            f"- Path: {' → '.join(map(str, item['associated_attacker_entry_to_critical_asset_path']))}",
-            f"- Estimated weighted-risk reduction: {item['estimated_risk_reduction_percent']:.2f}%.",
-            f"- {item['explanation']}",
-            "",
-        ])
-    (output_dir / "technical_explanations.md").write_text("\n".join(lines), encoding="utf-8")
-
+# ── 5. Output ────────────────────────────────────────────────────────────────
 
 def main() -> None:
-    graph = build_development_graph()
-    findings = build_findings()
-    grouped = findings_by_host(findings)
-    rows = graph_aware_rows(graph, findings)
-    eligible = [row for row in rows if row["associated_path"]]
-    if len(eligible) < TOP_K:
-        raise RuntimeError("Development graph did not yield ten path-associated candidates.")
-    selected = eligible[:TOP_K]
-    baseline_risk = simulate_risk(graph, grouped, BASELINE_SIMULATIONS, SEED)
-    patch_results = {}
-    for index, row in enumerate(selected):
-        patched_risk = simulate_risk(graph, grouped, PATCH_SIMULATIONS_PER_ITEM, SEED + index + 1, row["vulnerability_id"])
-        patch_results[row["vulnerability_id"]] = max(0.0, (baseline_risk - patched_risk) / baseline_risk) if baseline_risk else 0.0
-    write_outputs(rows, baseline_risk, patch_results, Path(__file__).resolve().parent / "output")
-    print(f"Wrote 80 ranked findings and {TOP_K} patch recommendations using {BASELINE_SIMULATIONS + TOP_K * PATCH_SIMULATIONS_PER_ITEM} simulations.")
+    t0 = perf_counter()
+
+    graph = build_graph()
+    vulns = build_vulns()
+    baseline_risk, patch_values, _ = evaluate_all(graph, vulns)
+
+    # ── Host-level context ───────────────────────────────────────────────
+    host_vulns_map: dict[int, list[Vuln]] = defaultdict(list)
+    for v in vulns:
+        host_vulns_map[v.host].append(v)
+
+    rows: list[dict] = []
+    for v in vulns:
+        h = v.host
+        path = find_path(graph, h)
+
+        entry_dist = min(
+            nx.shortest_path_length(graph, e, h) for e in ENTRY_NODES
+        )
+        crit_dists = {
+            c: nx.shortest_path_length(graph, h, c) for c in CRITICAL_WEIGHTS
+        }
+        nearest_crit_dist = min(crit_dists.values())
+
+        sibling_fail = float(np.prod([
+            1.0 - o.prob for o in host_vulns_map[h] if o.vid != v.vid
+        ]))
+        individual_enablement = v.prob * sibling_fail
+
+        pv = patch_values[v.vid]
+        rr_frac = pv / baseline_risk if baseline_risk > 0 else 0.0
+
+        rows.append({
+            "vulnerability_id": v.vid,
+            "host_id":          h,
+            "cvss":             v.cvss,
+            "exploit_probability": v.prob,
+            "entry_distance":   entry_dist,
+            "nearest_critical_distance": nearest_crit_dist,
+            "individual_enablement": round(individual_enablement, 8),
+            "patch_value":      round(pv, 8),
+            "risk_reduction_fraction": round(rr_frac, 8),
+            "risk_reduction_percent":  round(100.0 * rr_frac, 4),
+            "associated_path":  path or [],
+        })
+
+    # ── Rank ─────────────────────────────────────────────────────────────
+    rows.sort(key=lambda r: (
+        -r["patch_value"],
+        -r["individual_enablement"],
+        -r["cvss"],
+        r["vulnerability_id"],
+    ))
+    for i, r in enumerate(rows, 1):
+        r["rank"] = i
+
+    out = Path(__file__).resolve().parent / "output"
+    out.mkdir(parents=True, exist_ok=True)
+
+    # ── ranked_vulnerabilities.csv ───────────────────────────────────────
+    fields = ["rank"] + [k for k in rows[0] if k != "rank"]
+    with (out / "ranked_vulnerabilities.csv").open("w", newline="", encoding="utf-8") as f:
+        w = csv.DictWriter(f, fieldnames=fields)
+        w.writeheader()
+        for r in rows:
+            row = dict(r)
+            row["associated_path"] = " -> ".join(map(str, row["associated_path"]))
+            w.writerow(row)
+
+    # ── Top-10 ───────────────────────────────────────────────────────────
+    top10 = [r for r in rows if r["associated_path"]][:TOP_K]
+
+    plan: list[dict] = []
+    for r in top10:
+        path_str = " → ".join(map(str, r["associated_path"]))
+        plan.append({
+            "rank":              r["rank"],
+            "vulnerability_id":  r["vulnerability_id"],
+            "host_id":           r["host_id"],
+            "cvss":              r["cvss"],
+            "exploit_probability": r["exploit_probability"],
+            "associated_path":   r["associated_path"],
+            "associated_path_display": path_str,
+            "baseline_weighted_risk":  round(baseline_risk, 6),
+            "patched_weighted_risk":   round(baseline_risk - r["patch_value"], 6),
+            "estimated_risk_reduction_fraction": r["risk_reduction_fraction"],
+            "estimated_risk_reduction_percent":  r["risk_reduction_percent"],
+            "explanation": (
+                f"{r['vulnerability_id']} on host {r['host_id']} "
+                f"(CVSS {r['cvss']:.1f}, exploit prob {r['exploit_probability']:.3f}) "
+                f"sits on attack path {path_str}. "
+                f"Individual host-enablement contribution: {r['individual_enablement']:.4f} "
+                f"(probability this vuln alone breaches its host). "
+                f"Patching it reduces the network's weighted critical-asset risk "
+                f"from {baseline_risk:.4f} to {baseline_risk - r['patch_value']:.4f} "
+                f"(−{r['risk_reduction_percent']:.2f}%), measured via "
+                f"{N_SIMULATIONS} synchronized Monte Carlo trials."
+            ),
+        })
+
+    (out / "top10_patch_plan.json").write_text(
+        json.dumps(plan, indent=2, default=str), encoding="utf-8",
+    )
+
+    # ── Simulation report ────────────────────────────────────────────────
+    elapsed = round(perf_counter() - t0, 4)
+    report = {
+        "max_allowed_simulations": 4000,
+        "monte_carlo_trials_drawn": N_SIMULATIONS,
+        "total_simulations_used":  N_SIMULATIONS,
+        "within_budget":           N_SIMULATIONS <= 4000,
+        "method": (
+            "Common-random-numbers: 4 000 exploit-outcome matrices "
+            "pre-drawn once and reused for baseline + all 80 patch "
+            "scenarios.  Each patch scenario replays BFS on the same "
+            "random outcomes with one vulnerability disabled."
+        ),
+        "baseline_weighted_risk": round(baseline_risk, 6),
+        "vulnerabilities_evaluated": len(vulns),
+        "non_zero_patch_values": sum(1 for v in patch_values.values() if v > 0),
+        "top_k":       TOP_K,
+        "runtime_sec": elapsed,
+    }
+    (out / "simulation_report.json").write_text(
+        json.dumps(report, indent=2), encoding="utf-8",
+    )
+
+    # ── Technical explanations ───────────────────────────────────────────
+    lines = [
+        "# Technical Explanations — Top-10 Patch Recommendations",
+        "",
+        f"**Baseline weighted critical-asset risk**: {baseline_risk:.4f}  ",
+        f"**Simulation budget**: {N_SIMULATIONS} pre-drawn Monte Carlo "
+        f"trials (common-random-numbers variance reduction).  ",
+        f"**Vulnerabilities with measurable patch value**: "
+        f"{sum(1 for v in patch_values.values() if v > 0)} / {len(vulns)}",
+        "",
+        "---",
+        "",
+    ]
+    for item in plan:
+        lines += [
+            f"## {item['rank']}. {item['vulnerability_id']} "
+            f"on host {item['host_id']}",
+            "",
+            f"| Metric | Value |",
+            f"|--------|-------|",
+            f"| CVSS | {item['cvss']:.1f} |",
+            f"| Exploit probability | {item['exploit_probability']:.3f} |",
+            f"| Path | {item['associated_path_display']} |",
+            f"| Risk reduction | {item['estimated_risk_reduction_percent']:.2f}% |",
+            f"| Baseline → Patched risk | "
+            f"{item['baseline_weighted_risk']:.4f} → "
+            f"{item['patched_weighted_risk']:.4f} |",
+            "",
+            f"{item['explanation']}",
+            "",
+            "---",
+            "",
+        ]
+    (out / "technical_explanations.md").write_text(
+        "\n".join(lines), encoding="utf-8",
+    )
+
+    # ── Console summary ──────────────────────────────────────────────────
+    n_nonzero = sum(1 for r in top10 if r["patch_value"] > 0)
+    print(f"Ranked {len(vulns)} vulnerabilities using "
+          f"{N_SIMULATIONS} simulations in {elapsed:.2f}s.")
+    print(f"Baseline weighted risk: {baseline_risk:.4f}")
+    print(f"Top-{TOP_K}: {n_nonzero}/{len(top10)} with non-zero "
+          f"risk reduction.")
+    print(f"Max single-patch reduction: "
+          f"{max(r['risk_reduction_percent'] for r in top10):.2f}%")
+    print(f"Output → {out}/")
 
 
 if __name__ == "__main__":

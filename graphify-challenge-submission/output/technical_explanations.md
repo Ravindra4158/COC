@@ -1,53 +1,147 @@
-# Technical explanations
+# Technical Explanations — Top-10 Patch Recommendations
 
-The ten recommendations below have a valid attacker-entry-to-critical-asset path and a numerical, budgeted Monte Carlo patch estimate.
+**Baseline weighted critical-asset risk**: 11.2145  
+**Simulation budget**: 4000 pre-drawn Monte Carlo trials (common-random-numbers variance reduction).  
+**Vulnerabilities with measurable patch value**: 53 / 80
+
+---
 
 ## 1. h39-v2 on host 39
-- Path: 0 → 29 → 39 → 7 → 11 → 5 → 35
-- Estimated weighted-risk reduction: 23.45%.
-- h39-v2 contributes individual host enablement 0.6692; it lies on [0, 29, 39, 7, 11, 5, 35] and patching it reduced simulated weighted critical risk by 23.45%.
 
-## 2. h29-v1 on host 29
-- Path: 0 → 29 → 37 → 38 → 35
-- Estimated weighted-risk reduction: 0.00%.
-- h29-v1 contributes individual host enablement 0.2983; it lies on [0, 29, 37, 38, 35] and patching it reduced simulated weighted critical risk by 0.00%.
+| Metric | Value |
+|--------|-------|
+| CVSS | 8.4 |
+| Exploit probability | 0.802 |
+| Path | 0 → 29 → 39 |
+| Risk reduction | 27.74% |
+| Baseline → Patched risk | 11.2145 → 8.1040 |
 
-## 3. h12-v1 on host 12
-- Path: 0 → 12 → 35
-- Estimated weighted-risk reduction: 0.00%.
-- h12-v1 contributes individual host enablement 0.5331; it lies on [0, 12, 35] and patching it reduced simulated weighted critical risk by 0.00%.
+h39-v2 on host 39 (CVSS 8.4, exploit prob 0.802) sits on attack path 0 → 29 → 39. Individual host-enablement contribution: 0.6692 (probability this vuln alone breaches its host). Patching it reduces the network's weighted critical-asset risk from 11.2145 to 8.1040 (−27.74%), measured via 4000 synchronized Monte Carlo trials.
 
-## 4. h7-v1 on host 7
-- Path: 0 → 29 → 39 → 7 → 11 → 5 → 35
-- Estimated weighted-risk reduction: 0.00%.
-- h7-v1 contributes individual host enablement 0.4945; it lies on [0, 29, 39, 7, 11, 5, 35] and patching it reduced simulated weighted critical risk by 0.00%.
+---
 
-## 5. h36-v1 on host 36
-- Path: 0 → 12 → 8 → 36
-- Estimated weighted-risk reduction: 6.74%.
-- h36-v1 contributes individual host enablement 0.5640; it lies on [0, 12, 8, 36] and patching it reduced simulated weighted critical risk by 6.74%.
+## 2. h36-v1 on host 36
 
-## 6. h19-v1 on host 19
-- Path: 0 → 29 → 19 → 3 → 12 → 35
-- Estimated weighted-risk reduction: 0.00%.
-- h19-v1 contributes individual host enablement 0.4860; it lies on [0, 29, 19, 3, 12, 35] and patching it reduced simulated weighted critical risk by 0.00%.
+| Metric | Value |
+|--------|-------|
+| CVSS | 9.6 |
+| Exploit probability | 0.949 |
+| Path | 0 → 12 → 8 → 36 |
+| Risk reduction | 9.61% |
+| Baseline → Patched risk | 11.2145 → 10.1370 |
 
-## 7. h38-v2 on host 38
-- Path: 0 → 12 → 35 → 38 → 37 → 15 → 14 → 8 → 36
-- Estimated weighted-risk reduction: 1.52%.
-- h38-v2 contributes individual host enablement 0.2474; it lies on [0, 12, 35, 38, 37, 15, 14, 8, 36] and patching it reduced simulated weighted critical risk by 1.52%.
+h36-v1 on host 36 (CVSS 9.6, exploit prob 0.949) sits on attack path 0 → 12 → 8 → 36. Individual host-enablement contribution: 0.5640 (probability this vuln alone breaches its host). Patching it reduces the network's weighted critical-asset risk from 11.2145 to 10.1370 (−9.61%), measured via 4000 synchronized Monte Carlo trials.
 
-## 8. h27-v1 on host 27
-- Path: 0 → 29 → 19 → 27 → 16 → 5 → 35
-- Estimated weighted-risk reduction: 0.00%.
-- h27-v1 contributes individual host enablement 0.7375; it lies on [0, 29, 19, 27, 16, 5, 35] and patching it reduced simulated weighted critical risk by 0.00%.
+---
 
-## 9. h25-v1 on host 25
-- Path: 0 → 12 → 2 → 25 → 10 → 35
-- Estimated weighted-risk reduction: 0.00%.
-- h25-v1 contributes individual host enablement 0.5667; it lies on [0, 12, 2, 25, 10, 35] and patching it reduced simulated weighted critical risk by 0.00%.
+## 3. h38-v2 on host 38
 
-## 10. h33-v1 on host 33
-- Path: 0 → 29 → 33 → 26 → 3 → 12 → 35
-- Estimated weighted-risk reduction: 0.00%.
-- h33-v1 contributes individual host enablement 0.3946; it lies on [0, 29, 33, 26, 3, 12, 35] and patching it reduced simulated weighted critical risk by 0.00%.
+| Metric | Value |
+|--------|-------|
+| CVSS | 7.6 |
+| Exploit probability | 0.700 |
+| Path | 0 → 12 → 35 → 38 → 37 → 29 → 39 |
+| Risk reduction | 8.58% |
+| Baseline → Patched risk | 11.2145 → 10.2528 |
+
+h38-v2 on host 38 (CVSS 7.6, exploit prob 0.700) sits on attack path 0 → 12 → 35 → 38 → 37 → 29 → 39. Individual host-enablement contribution: 0.2474 (probability this vuln alone breaches its host). Patching it reduces the network's weighted critical-asset risk from 11.2145 to 10.2527 (−8.58%), measured via 4000 synchronized Monte Carlo trials.
+
+---
+
+## 4. h38-v1 on host 38
+
+| Metric | Value |
+|--------|-------|
+| CVSS | 7.2 |
+| Exploit probability | 0.647 |
+| Path | 0 → 12 → 35 → 38 → 37 → 29 → 39 |
+| Risk reduction | 7.22% |
+| Baseline → Patched risk | 11.2145 → 10.4047 |
+
+h38-v1 on host 38 (CVSS 7.2, exploit prob 0.647) sits on attack path 0 → 12 → 35 → 38 → 37 → 29 → 39. Individual host-enablement contribution: 0.1939 (probability this vuln alone breaches its host). Patching it reduces the network's weighted critical-asset risk from 11.2145 to 10.4047 (−7.22%), measured via 4000 synchronized Monte Carlo trials.
+
+---
+
+## 5. h26-v2 on host 26
+
+| Metric | Value |
+|--------|-------|
+| CVSS | 9.0 |
+| Exploit probability | 0.874 |
+| Path | 0 → 29 → 26 → 25 → 22 → 11 → 7 → 39 |
+| Risk reduction | 5.97% |
+| Baseline → Patched risk | 11.2145 → 10.5445 |
+
+h26-v2 on host 26 (CVSS 9.0, exploit prob 0.874) sits on attack path 0 → 29 → 26 → 25 → 22 → 11 → 7 → 39. Individual host-enablement contribution: 0.1152 (probability this vuln alone breaches its host). Patching it reduces the network's weighted critical-asset risk from 11.2145 to 10.5445 (−5.97%), measured via 4000 synchronized Monte Carlo trials.
+
+---
+
+## 6. h26-v1 on host 26
+
+| Metric | Value |
+|--------|-------|
+| CVSS | 8.9 |
+| Exploit probability | 0.868 |
+| Path | 0 → 29 → 26 → 25 → 22 → 11 → 7 → 39 |
+| Risk reduction | 5.66% |
+| Baseline → Patched risk | 11.2145 → 10.5798 |
+
+h26-v1 on host 26 (CVSS 8.9, exploit prob 0.868) sits on attack path 0 → 29 → 26 → 25 → 22 → 11 → 7 → 39. Individual host-enablement contribution: 0.1094 (probability this vuln alone breaches its host). Patching it reduces the network's weighted critical-asset risk from 11.2145 to 10.5797 (−5.66%), measured via 4000 synchronized Monte Carlo trials.
+
+---
+
+## 7. h29-v1 on host 29
+
+| Metric | Value |
+|--------|-------|
+| CVSS | 8.0 |
+| Exploit probability | 0.753 |
+| Path | 0 → 29 → 39 |
+| Risk reduction | 5.17% |
+| Baseline → Patched risk | 11.2145 → 10.6348 |
+
+h29-v1 on host 29 (CVSS 8.0, exploit prob 0.753) sits on attack path 0 → 29 → 39. Individual host-enablement contribution: 0.2983 (probability this vuln alone breaches its host). Patching it reduces the network's weighted critical-asset risk from 11.2145 to 10.6347 (−5.17%), measured via 4000 synchronized Monte Carlo trials.
+
+---
+
+## 8. h37-v1 on host 37
+
+| Metric | Value |
+|--------|-------|
+| CVSS | 3.9 |
+| Exploit probability | 0.238 |
+| Path | 0 → 29 → 37 → 38 → 16 → 5 → 11 → 7 → 39 |
+| Risk reduction | 4.99% |
+| Baseline → Patched risk | 11.2145 → 10.6550 |
+
+h37-v1 on host 37 (CVSS 3.9, exploit prob 0.238) sits on attack path 0 → 29 → 37 → 38 → 16 → 5 → 11 → 7 → 39. Individual host-enablement contribution: 0.1908 (probability this vuln alone breaches its host). Patching it reduces the network's weighted critical-asset risk from 11.2145 to 10.6550 (−4.99%), measured via 4000 synchronized Monte Carlo trials.
+
+---
+
+## 9. h8-v1 on host 8
+
+| Metric | Value |
+|--------|-------|
+| CVSS | 9.0 |
+| Exploit probability | 0.871 |
+| Path | 0 → 12 → 8 → 14 → 15 → 37 → 29 → 39 |
+| Risk reduction | 4.17% |
+| Baseline → Patched risk | 11.2145 → 10.7465 |
+
+h8-v1 on host 8 (CVSS 9.0, exploit prob 0.871) sits on attack path 0 → 12 → 8 → 14 → 15 → 37 → 29 → 39. Individual host-enablement contribution: 0.2450 (probability this vuln alone breaches its host). Patching it reduces the network's weighted critical-asset risk from 11.2145 to 10.7465 (−4.17%), measured via 4000 synchronized Monte Carlo trials.
+
+---
+
+## 10. h37-v2 on host 37
+
+| Metric | Value |
+|--------|-------|
+| CVSS | 3.6 |
+| Exploit probability | 0.199 |
+| Path | 0 → 29 → 37 → 38 → 16 → 5 → 11 → 7 → 39 |
+| Risk reduction | 3.96% |
+| Baseline → Patched risk | 11.2145 → 10.7700 |
+
+h37-v2 on host 37 (CVSS 3.6, exploit prob 0.199) sits on attack path 0 → 29 → 37 → 38 → 16 → 5 → 11 → 7 → 39. Individual host-enablement contribution: 0.1516 (probability this vuln alone breaches its host). Patching it reduces the network's weighted critical-asset risk from 11.2145 to 10.7700 (−3.96%), measured via 4000 synchronized Monte Carlo trials.
+
+---

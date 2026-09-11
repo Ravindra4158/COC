@@ -24,16 +24,24 @@ from src.scoring.priority_score import score_all_vulnerabilities
 def run_analysis(
     config_path: str | Path = "config.yaml",
     data: Mapping[str, pd.DataFrame] | None = None,
+    disabled_vulnerabilities: list[str] | None = None,
+    seed: int | None = None,
 ) -> dict[str, Any]:
     """Run one analysis over supplied evaluator data or the local dev instance.
 
     ``data`` takes precedence over local generation. This lets an evaluator provide
     an unseen network and finding set without changing the ranking implementation.
+    ``disabled_vulnerabilities`` allows simulating the network state after patches are applied.
+    ``seed`` allows testing alternative reproducible states/topologies.
     """
     started = perf_counter()
     with open(config_path, encoding="utf-8") as handle:
         config = yaml.safe_load(handle) or {}
     development_config = config.get("development_instance", {})
+    if seed is not None:
+        development_config = dict(development_config)
+        development_config["seed"] = seed
+
     supplied_data = data is not None
     if supplied_data:
         data = dict(data)
@@ -42,6 +50,14 @@ def run_analysis(
     else:
         raw_dir = config["data"]["raw_dir"]
         data = load_all_data(raw_dir)
+
+    if disabled_vulnerabilities:
+        disabled_set = set(disabled_vulnerabilities)
+        v_copy = data["vulnerabilities"].copy()
+        mask = v_copy["vuln_id"].isin(disabled_set)
+        v_copy.loc[mask, "exploit_probability"] = 0.0
+        data["vulnerabilities"] = v_copy
+
     validate_all(data)
     graph_config = config.get("graph", {})
     directed = development_config.get("topology", {}).get("directed", graph_config.get("directed", True))
@@ -65,6 +81,7 @@ def run_analysis(
         graph, entry_points, critical_assets, max_path_length=39, max_paths_per_target=1
     )
     simulation_config = config.get("simulation", {})
+    sim_seed = seed if seed is not None else int(simulation_config.get("seed", 42))
     baseline = run_baseline_simulation(
         graph,
         data["vulnerabilities"],
@@ -72,7 +89,7 @@ def run_analysis(
         critical_assets,
         # Reserve half of the hard budget for individual patch evaluations.
         n_simulations=min(int(simulation_config.get("default_simulations", 2000)), MAX_SIMULATIONS // 2),
-        seed=int(simulation_config.get("seed", 42)),
+        seed=sim_seed,
         max_steps=int(simulation_config.get("max_attack_steps", 50)),
     )
     weights = config.get("scoring", {}).get("weights")
@@ -112,6 +129,7 @@ def run_analysis(
         graph_analysis,
         baseline_result=baseline,
         patch_simulations=patch_simulations,
+        seed=sim_seed,
         top_k=int(optimization_config.get("top_k", 10)),
     )
     top10 = patch_impact.head(int(optimization_config.get("top_k", 10))).copy()
@@ -150,6 +168,8 @@ def run_analysis(
             * float(row.get("criticality", row.get("impact_weight", 1.0)))
             for asset, row in zip(critical_assets, data["critical_assets"].to_dict("records"))
         )),
+        "active_patches": list(disabled_vulnerabilities or []),
+        "active_seed": sim_seed,
         "runtime_seconds": round(perf_counter() - started, 4),
     }
     with open(output_dir / "analysis_summary.json", "w", encoding="utf-8") as handle:

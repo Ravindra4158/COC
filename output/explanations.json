@@ -1,12 +1,12 @@
 {
-  "39:h39-v2": "h39-v2 on 39 affects 2 attack-path occurrence(s) toward 35, 36, 37, 38, 39; virtual patching reduces risk by 32.1% via path 0 -> 29 -> 39 -> 7 -> 11 -> 5 -> 35.",
-  "36:h36-v1": "h36-v1 on 36 affects 2 attack-path occurrence(s) toward 35, 36, 37, 38, 39; virtual patching reduces risk by 12.8% via path 0 -> 12 -> 8 -> 36.",
-  "5:h5-v1": "h5-v1 on 5 affects 0 attack-path occurrence(s) toward 35, 36, 37, 38, 39; virtual patching reduces risk by 10.5% via path 0 -> 12 -> 35 -> 5 -> 13 -> 14 -> 8 -> 36.",
-  "35:h35-v2": "h35-v2 on 35 affects 3 attack-path occurrence(s) toward 35, 36, 37, 38, 39; virtual patching reduces risk by 9.8% via path 0 -> 12 -> 35.",
-  "23:h23-v1": "h23-v1 on 23 affects 0 attack-path occurrence(s) toward 35, 36, 37, 38, 39; virtual patching reduces risk by 8.2% via path 0 -> 12 -> 8 -> 23 -> 34 -> 5 -> 35.",
-  "28:h28-v2": "h28-v2 on 28 affects 0 attack-path occurrence(s) toward 35, 36, 37, 38, 39; virtual patching reduces risk by 8.2% via path 0 -> 29 -> 19 -> 27 -> 28 -> 34 -> 5 -> 35.",
-  "15:h15-v2": "h15-v2 on 15 affects 0 attack-path occurrence(s) toward 35, 36, 37, 38, 39; virtual patching reduces risk by 7.9% via path 0 -> 12 -> 14 -> 15 -> 37 -> 38 -> 35.",
-  "6:h6-v2": "h6-v2 on 6 affects 0 attack-path occurrence(s) toward 35, 36, 37, 38, 39; virtual patching reduces risk by 7.9% via path 0 -> 32 -> 10 -> 6 -> 5 -> 35.",
-  "4:h4-v1": "h4-v1 on 4 affects 0 attack-path occurrence(s) toward 35, 36, 37, 38, 39; virtual patching reduces risk by 7.9% via path 0 -> 29 -> 26 -> 4 -> 18 -> 3 -> 12 -> 35.",
-  "2:h2-v1": "h2-v1 on 2 affects 0 attack-path occurrence(s) toward 35, 36, 37, 38, 39; virtual patching reduces risk by 7.2% via path 0 -> 12 -> 2 -> 16 -> 5 -> 35."
+  "39:h39-v2": "h39-v2 on 39 affects 2 attack-path occurrence(s) toward 35, 36, 37, 38, 39; virtual patching reduces risk by 28.2% via path 0 -> 29 -> 39 -> 7 -> 11 -> 5 -> 35.",
+  "36:h36-v1": "h36-v1 on 36 affects 2 attack-path occurrence(s) toward 35, 36, 37, 38, 39; virtual patching reduces risk by 9.7% via path 0 -> 12 -> 8 -> 36.",
+  "38:h38-v2": "h38-v2 on 38 affects 2 attack-path occurrence(s) toward 35, 36, 37, 38, 39; virtual patching reduces risk by 8.6% via path 0 -> 12 -> 35 -> 38 -> 37 -> 15 -> 14 -> 8 -> 36.",
+  "38:h38-v1": "h38-v1 on 38 affects 2 attack-path occurrence(s) toward 35, 36, 37, 38, 39; virtual patching reduces risk by 6.8% via path 0 -> 12 -> 35 -> 38 -> 37 -> 15 -> 14 -> 8 -> 36.",
+  "26:h26-v2": "h26-v2 on 26 affects 5 attack-path occurrence(s) toward 35, 36, 37, 38, 39; virtual patching reduces risk by 5.7% via path 0 -> 29 -> 26 -> 25 -> 10 -> 35.",
+  "26:h26-v1": "h26-v1 on 26 affects 5 attack-path occurrence(s) toward 35, 36, 37, 38, 39; virtual patching reduces risk by 5.5% via path 0 -> 29 -> 26 -> 25 -> 10 -> 35.",
+  "37:h37-v1": "h37-v1 on 37 affects 3 attack-path occurrence(s) toward 35, 36, 37, 38, 39; virtual patching reduces risk by 5.2% via path 0 -> 29 -> 37 -> 38 -> 35.",
+  "29:h29-v1": "h29-v1 on 29 affects 5 attack-path occurrence(s) toward 35, 36, 37, 38, 39; virtual patching reduces risk by 4.9% via path 0 -> 29 -> 37 -> 38 -> 35.",
+  "8:h8-v1": "h8-v1 on 8 affects 2 attack-path occurrence(s) toward 35, 36, 37, 38, 39; virtual patching reduces risk by 3.9% via path 0 -> 12 -> 8 -> 14 -> 13 -> 5 -> 35.",
+  "37:h37-v2": "h37-v2 on 37 affects 3 attack-path occurrence(s) toward 35, 36, 37, 38, 39; virtual patching reduces risk by 3.7% via path 0 -> 29 -> 37 -> 38 -> 35."
 }
