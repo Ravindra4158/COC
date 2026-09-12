@@ -13,7 +13,7 @@ import networkx as nx
 import pandas as pd
 import yaml
 
-from src.data.loader import generate_development_instance, load_all_data
+from src.data.loader import generate_development_instance, load_all_data, parse_seed
 from src.data.validator import validate_all
 from src.explanation.explainer import generate_recommendation_reason
 from src.graph.analysis import analyze_attack_graph
@@ -32,14 +32,14 @@ def run_analysis(
     config_path: str | Path = "config.yaml",
     data: Mapping[str, pd.DataFrame] | None = None,
     disabled_vulnerabilities: list[str] | None = None,
-    seed: int | None = None,
+    seed: int | str | None = None,
 ) -> dict[str, Any]:
     """Run one analysis over supplied evaluator data or the local dev instance.
 
     ``data`` takes precedence over local generation. This lets an evaluator provide
     an unseen network and finding set without changing the ranking implementation.
     ``disabled_vulnerabilities`` allows simulating the network state after patches are applied.
-    ``seed`` allows testing alternative reproducible states/topologies.
+    ``seed`` allows testing alternative reproducible states/topologies (accepts int, date, or word).
     """
     started = perf_counter()
     with open(config_path, encoding="utf-8") as handle:
@@ -47,7 +47,7 @@ def run_analysis(
     development_config = config.get("development_instance", {})
     if seed is not None:
         development_config = dict(development_config)
-        development_config["seed"] = seed
+        development_config["seed"] = parse_seed(seed)
 
     supplied_data = data is not None
     if supplied_data:
@@ -109,11 +109,12 @@ def run_analysis(
             non_crit = [n for n in sorted(graph.nodes, key=_sort_k) if n not in crit_set]
             entry_points = non_crit[:2] if non_crit else list(sorted(graph.nodes, key=_sort_k))[:2]
 
+    max_pl = max(1, min(39, len(graph.nodes) - 1))
     graph_analysis = analyze_attack_graph(
-        graph, entry_points, critical_assets, max_path_length=39, max_paths_per_target=1
+        graph, entry_points, critical_assets, max_path_length=max_pl, max_paths_per_target=1
     )
     simulation_config = config.get("simulation", {})
-    sim_seed = seed if seed is not None else int(simulation_config.get("seed", 42))
+    sim_seed = parse_seed(seed) if seed is not None else parse_seed(simulation_config.get("seed", 42))
 
     # Stage 1: Baseline Monte Carlo attack simulation
     baseline_sims = min(int(simulation_config.get("default_simulations", 2000)), MAX_SIMULATIONS // 2)
@@ -156,6 +157,19 @@ def run_analysis(
             candidate for candidate in filter_patch_candidates(scored, graph_analysis)
             if candidate.get("vulnerability_id") not in disabled_set
         ]
+
+    # The priority score is a zero-simulation analytic pre-filter. Keep a
+    # wide shortlist so the measured pass can correct small analytic errors.
+    shortlist_size = max(1, int(optimization_config.get("candidate_shortlist_size", 30)))
+    candidates = sorted(
+        candidates,
+        key=lambda candidate: (
+            -float(candidate.get("priority_score", 0.0)),
+            -float(candidate.get("individual_enablement", 0.0)),
+            -float(candidate.get("cvss", 0.0)),
+            str(candidate.get("vulnerability_id", "")),
+        ),
+    )[:shortlist_size]
 
     remaining_budget = max(1, MAX_SIMULATIONS - baseline.simulations)
     requested_patch_simulations = int(optimization_config.get("patch_simulations", 500))
@@ -285,6 +299,37 @@ def run_analysis(
     with open(output_dir / "simulation_report.json", "w", encoding="utf-8") as handle:
         json.dump(sim_report, handle, indent=2)
 
+    md_lines = [
+        "# Technical Explanations — Top-10 Patch Recommendations",
+        "",
+        f"- **Baseline Weighted Critical-Asset Risk**: {base_risk:.4f}",
+        f"- **Monte Carlo Simulation Budget**: {total_simulations} trials (within <= {MAX_SIMULATIONS} budget)",
+        f"- **Total Vulnerabilities**: {len(data['vulnerabilities'])}",
+        f"- **Execution Runtime**: {elapsed:.2f}s",
+        "",
+        "---",
+        "",
+    ]
+    for item in top10_plan:
+        md_lines.extend([
+            f"## #{item['rank']}. {item['vulnerability_id']} on Host {item['host_id']}",
+            "",
+            "| Metric | Value |",
+            "|---|---|",
+            f"| CVSS Severity | {item['cvss']:.1f} |",
+            f"| Exploit Probability | {item['exploit_probability']:.3f} |",
+            f"| Verified Attack Path | `{item['associated_path_display']}` |",
+            f"| Estimated Risk Reduction | **{item['estimated_risk_reduction_percent']:.2f}%** (fraction: {item['estimated_risk_reduction_fraction']:.4f}) |",
+            f"| Network Risk Impact | {item['baseline_weighted_risk']:.4f} → {item['patched_weighted_risk']:.4f} |",
+            "",
+            f"> **Rationale**: {item['explanation']}",
+            "",
+            "---",
+            "",
+        ])
+    with open(output_dir / "technical_explanations.md", "w", encoding="utf-8") as handle:
+        handle.write("\n".join(md_lines))
+
     return {
         "config": config,
         "data": data,
@@ -316,7 +361,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Attack-Path-Aware Vulnerability Prioritization Pipeline")
     parser.add_argument("--data-dir", type=str, default=None, help="Directory containing CSV data (hosts.csv, etc.)")
     parser.add_argument("--config", type=str, default="config.yaml", help="Path to YAML configuration")
-    parser.add_argument("--seed", type=int, default=None, help="Random seed for simulation and graph")
+    parser.add_argument("--seed", type=str, default=None, help="Random seed or date (e.g. 20260911, 2026-09-11, today) for simulation and graph")
     parser.add_argument("--output-dir", type=str, default="output", help="Directory for output artifacts")
     args = parser.parse_args()
 
@@ -324,7 +369,8 @@ if __name__ == "__main__":
     if args.data_dir:
         supplied = load_all_data(args.data_dir)
 
-    result = run_analysis(config_path=args.config, data=supplied, seed=args.seed)
+    user_seed = parse_seed(args.seed) if args.seed is not None else None
+    result = run_analysis(config_path=args.config, data=supplied, seed=user_seed)
     print(f"Ranked {len(result['scored'])} vulnerabilities on {len(result['graph'].nodes)} hosts.")
     print(f"Top 10 patch recommendations generated.")
     print(f"Simulations used: {result['summary']['simulation_count']} / {MAX_SIMULATIONS}")

@@ -72,10 +72,18 @@ def validate_critical_assets(assets: pd.DataFrame, host_ids: set) -> None:
 def validate_all(data: dict) -> None:
     _require_columns(data)
     validate_hosts(data["hosts"])
-    host_ids = set(data["hosts"]["host_id"])
+    raw_host_ids = set(data["hosts"]["host_id"])
+    host_ids = raw_host_ids | {str(h) for h in raw_host_ids}
+    for h in raw_host_ids:
+        try:
+            if str(h).isdigit():
+                host_ids.add(int(h))
+        except (ValueError, TypeError):
+            pass
     validate_vulnerabilities(data["vulnerabilities"], host_ids)
     validate_network_edges(data["network_edges"], host_ids)
     validate_critical_assets(data["critical_assets"], host_ids)
 
 
 validate_data = validate_all
+

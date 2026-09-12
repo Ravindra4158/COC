@@ -4,15 +4,13 @@
   "critical_assets": 5,
   "reachable_critical_assets": 5,
   "attack_paths": 10,
-  "simulation_count": 3971,
+  "simulation_count": 3980,
   "stage_1_simulations": 2000,
-  "stage_2_simulations": 1971,
-  "candidate_count": 73,
+  "stage_2_simulations": 1980,
+  "candidate_count": 30,
   "top10_count": 10,
-  "baseline_risk": 12.707,
-  "active_patches": [
-    "h39-v2"
-  ],
+  "baseline_risk": 14.6035,
+  "active_patches": [],
   "active_seed": 20260911,
-  "runtime_seconds": 0.7463
+  "runtime_seconds": 0.2669
 }

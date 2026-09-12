@@ -1,17 +1,19 @@
-"""Root-level entrypoint for rank_vulnerabilities.py.
-
-Delegates directly to graphify-challenge-submission/rank_vulnerabilities.py.
-Supports both synthetic development mode and general CSV evaluation mode.
-"""
-
+import importlib.util
 import sys
 from pathlib import Path
 
-# Add challenge submission folder to sys.path
-submission_dir = Path(__file__).resolve().parent / "graphify-challenge-submission"
-sys.path.insert(0, str(submission_dir))
+# Load graphify-challenge-submission/rank_vulnerabilities.py
+_sub_path = Path(__file__).resolve().parent / "graphify-challenge-submission" / "rank_vulnerabilities.py"
+_spec = importlib.util.spec_from_file_location("submission_rank_vulnerabilities", _sub_path)
+_mod = importlib.util.module_from_spec(_spec)
+sys.modules[_spec.name] = _mod
+_spec.loader.exec_module(_mod)
 
-from rank_vulnerabilities import main
+# Expose all attributes in root module namespace
+for _attr in dir(_mod):
+    if not _attr.startswith("__"):
+        globals()[_attr] = getattr(_mod, _attr)
 
 if __name__ == "__main__":
-    main()
+    _mod.main()
+

@@ -69,7 +69,8 @@ class ItemsResponse(BaseModel):
 
 class RunAnalysisRequest(BaseModel):
     disabled_vulnerabilities: list[str] = Field(default_factory=list)
-    seed: int | None = None
+    seed: int | str | None = None
+
 
 
 class RefreshResponse(BaseModel):

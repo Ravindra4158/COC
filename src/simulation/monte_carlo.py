@@ -13,6 +13,7 @@ import numpy as np
 
 from .attacker import AttackerState, simulate_attack
 from .budget import DEFAULT_SIMULATIONS, MAX_ATTACK_STEPS, get_simulation_budget, filter_candidate_vulnerabilities
+from src.data.loader import parse_seed
 
 logger = logging.getLogger(__name__)
 
@@ -185,11 +186,12 @@ def run_baseline_simulation(
     entry_points = list(entry_points)
     critical_assets = list(critical_assets)
     rows = _normalise_vulnerabilities(vulnerabilities)
-    rng = np.random.Generator(np.random.PCG64(seed))
+    int_seed = parse_seed(seed, 42)
+    rng = np.random.Generator(np.random.PCG64(int_seed))
     accumulator = _new_accumulator(graph, rows, critical_assets)
-    logger.info("Running baseline simulation: simulations=%s seed=%s entries=%s assets=%s", simulations, seed, len(entry_points), len(critical_assets))
+    logger.info("Running baseline simulation: simulations=%s seed=%s entries=%s assets=%s", simulations, int_seed, len(entry_points), len(critical_assets))
     if not any(entry in graph for entry in entry_points):
-        return _result_from_accumulator(accumulator, simulations, seed, stage_2=simulations)
+        return _result_from_accumulator(accumulator, simulations, int_seed, stage_2=simulations)
     vulnerability_map = _vulnerability_map(rows)
     for _ in range(simulations):
         state = simulate_attack(
@@ -202,7 +204,7 @@ def run_baseline_simulation(
             disabled_vulnerabilities,
         )
         _record_trial(accumulator, state, {}, set(critical_assets))
-    return _result_from_accumulator(accumulator, simulations, seed, stage_2=simulations)
+    return _result_from_accumulator(accumulator, simulations, int_seed, stage_2=simulations)
 
 
 def evaluate_synchronized_monte_carlo(
@@ -212,13 +214,14 @@ def evaluate_synchronized_monte_carlo(
     critical_assets: Any,
     candidate_vuln_ids: set[Any] | None = None,
     n_sims: int = 4000,
-    seed: int = 20260911,
+    seed: int | str | None = 20260911,
 ) -> SynchronizedEvaluationResult:
     """High-performance Synchronized Monte Carlo with Common Random Numbers (CRN).
 
     Pre-draws random exploit outcome matrices to evaluate baseline risk and all
     single-vulnerability counterfactual patch scenarios with zero Monte Carlo variance.
     """
+    int_seed = parse_seed(seed, 20260911)
     nodes = list(graph.nodes)
     node_to_idx = {n: i for i, n in enumerate(nodes)}
     n_nodes = len(nodes)
@@ -232,7 +235,7 @@ def evaluate_synchronized_monte_carlo(
             host_causal_frequencies={},
             vulnerability_enablement={},
             total_simulations=0,
-            seed=seed,
+            seed=int_seed,
         )
 
     entry_indices = [node_to_idx[e] for e in entry_points if e in node_to_idx]
@@ -246,7 +249,7 @@ def evaluate_synchronized_monte_carlo(
             host_causal_frequencies={n: 0.0 for n in nodes},
             vulnerability_enablement={},
             total_simulations=0,
-            seed=seed,
+            seed=int_seed,
         )
 
     crit_map = _criticality_map(critical_assets)
@@ -261,6 +264,19 @@ def evaluate_synchronized_monte_carlo(
 
     vuln_rows = _normalise_vulnerabilities(vulnerabilities)
     n_v = len(vuln_rows)
+    if n_v == 0:
+        return SynchronizedEvaluationResult(
+            baseline_risk=0.0,
+            patch_values={},
+            critical_asset_probabilities={asset: 0.0 for asset in crit_map},
+            critical_asset_reach_probability=0.0,
+            host_compromise_probabilities={n: 0.0 for n in nodes},
+            host_causal_frequencies={n: 0.0 for n in nodes},
+            vulnerability_enablement={},
+            total_simulations=n_sims,
+            seed=int_seed,
+        )
+
     vid_to_idx = {r["vuln_id"]: i for i, r in enumerate(vuln_rows)}
     probs = np.array([float(r["exploit_probability"]) for r in vuln_rows])
 
@@ -282,7 +298,7 @@ def evaluate_synchronized_monte_carlo(
         vulnerability_enablement[r["vuln_id"]] = float(r["exploit_probability"]) * sibling_fail
 
     # Pre-draw all randomness
-    rng = np.random.Generator(np.random.PCG64(seed))
+    rng = np.random.Generator(np.random.PCG64(int_seed))
     draws = rng.random((n_sims, n_v))
     entries = rng.integers(0, len(entry_indices), size=n_sims)
     success = draws < probs

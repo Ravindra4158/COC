@@ -92,7 +92,8 @@ def evaluate_patch_impact(
         raise ValueError("patch candidate requires vulnerability_id or vuln_id")
     simulations = get_simulation_budget(patch_simulations)
     risk_before = calculate_network_risk(baseline_result, critical_assets)
-    baseline_seed = int(_field(baseline_result, "seed", 42))
+    raw_b_seed = _field(baseline_result, "seed", 42)
+    baseline_seed = int(raw_b_seed) if raw_b_seed is not None else 42
     patched_result = run_baseline_simulation(
         graph,
         vulnerabilities,
@@ -152,8 +153,11 @@ def evaluate_all_patch_impacts(
             n_simulations=baseline_simulations or 2000,
             seed=seed,
         )
-    baseline_seed = int(_field(baseline_result, "seed", seed))
-    sim_budget = min(4000, max(200, baseline_result.simulations))
+    raw_seed = _field(baseline_result, "seed", seed)
+    baseline_seed = int(raw_seed) if raw_seed is not None else 42
+    # The baseline is already available; spend only the caller's remaining
+    # per-candidate allowance on the shared synchronized counterfactual pass.
+    sim_budget = min(4000, max(1, int(patch_simulations)))
     candidates = filter_patch_candidates(rows, graph_analysis)
     analysis_features = {item["host_id"]: item for item in (graph_analysis or {}).get("host_features", [])}
     path_data = {item["host_id"]: item for item in (graph_analysis or {}).get("choke_points", [])}

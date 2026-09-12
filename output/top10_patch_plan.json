@@ -1,53 +1,10 @@
 [
   {
     "rank": 1,
-    "vulnerability_id": "h36-v1",
-    "host_id": 36,
-    "cvss": 9.591619,
-    "exploit_probability": 0.948952,
-    "associated_path": [
-      0,
-      12,
-      8,
-      36
-    ],
-    "associated_path_display": "0 \u2192 12 \u2192 8 \u2192 36",
-    "baseline_weighted_risk": 8.0675,
-    "patched_weighted_risk": 6.9815,
-    "estimated_risk_reduction_fraction": 0.134614,
-    "estimated_risk_reduction_percent": 13.4614,
-    "explanation": "h36-v1 on host 36 (CVSS 9.6, exploit prob 0.949) lies on attack path 0 \u2192 12 \u2192 8 \u2192 36. Marginal host-compromise enablement: 0.5640 (probability this vulnerability uniquely opens the host). Acts as a bottleneck node traversing 2 attack path(s). Threatens downstream critical assets: [35, 36, 37, 38, 39]. Mitigating it reduces network weighted critical-asset risk from 8.0675 to 6.9815 (-13.5%)."
-  },
-  {
-    "rank": 2,
-    "vulnerability_id": "h38-v2",
-    "host_id": 38,
-    "cvss": 7.601648,
-    "exploit_probability": 0.700206,
-    "associated_path": [
-      0,
-      12,
-      35,
-      38,
-      37,
-      15,
-      14,
-      8,
-      36
-    ],
-    "associated_path_display": "0 \u2192 12 \u2192 35 \u2192 38 \u2192 37 \u2192 15 \u2192 14 \u2192 8 \u2192 36",
-    "baseline_weighted_risk": 8.0675,
-    "patched_weighted_risk": 7.1,
-    "estimated_risk_reduction_fraction": 0.119926,
-    "estimated_risk_reduction_percent": 11.9926,
-    "explanation": "h38-v2 on host 38 (CVSS 7.6, exploit prob 0.700) lies on attack path 0 \u2192 12 \u2192 35 \u2192 38 \u2192 37 \u2192 15 \u2192 14 \u2192 8 \u2192 36. Marginal host-compromise enablement: 0.2474 (probability this vulnerability uniquely opens the host). Acts as a bottleneck node traversing 2 attack path(s). Threatens downstream critical assets: [35, 36, 37, 38, 39]. Mitigating it reduces network weighted critical-asset risk from 8.0675 to 7.1000 (-12.0%)."
-  },
-  {
-    "rank": 3,
-    "vulnerability_id": "h39-v1",
+    "vulnerability_id": "h39-v2",
     "host_id": 39,
-    "cvss": 3.32348,
-    "exploit_probability": 0.165435,
+    "cvss": 8.415071,
+    "exploit_probability": 0.801884,
     "associated_path": [
       0,
       29,
@@ -58,14 +15,14 @@
       35
     ],
     "associated_path_display": "0 \u2192 29 \u2192 39 \u2192 7 \u2192 11 \u2192 5 \u2192 35",
-    "baseline_weighted_risk": 8.0675,
-    "patched_weighted_risk": 7.3,
-    "estimated_risk_reduction_fraction": 0.095135,
-    "estimated_risk_reduction_percent": 9.5135,
-    "explanation": "h39-v1 on host 39 (CVSS 3.3, exploit prob 0.165) lies on attack path 0 \u2192 29 \u2192 39 \u2192 7 \u2192 11 \u2192 5 \u2192 35. Marginal host-compromise enablement: 0.1654 (probability this vulnerability uniquely opens the host). Acts as a bottleneck node traversing 2 attack path(s). Threatens downstream critical assets: [35, 36, 37, 38, 39]. Mitigating it reduces network weighted critical-asset risk from 8.0675 to 7.3000 (-9.5%)."
+    "baseline_weighted_risk": 11.454545,
+    "patched_weighted_risk": 7.969697,
+    "estimated_risk_reduction_fraction": 0.304233,
+    "estimated_risk_reduction_percent": 30.4233,
+    "explanation": "h39-v2 on host 39 (CVSS 8.4, exploit prob 0.802) lies on attack path 0 \u2192 29 \u2192 39 \u2192 7 \u2192 11 \u2192 5 \u2192 35. Marginal host-compromise enablement: 0.6692 (probability this vulnerability uniquely opens the host). Acts as a bottleneck node traversing 2 attack path(s). Threatens downstream critical assets: [35, 36, 37, 38, 39]. Mitigating it reduces network weighted critical-asset risk from 11.4545 to 7.9697 (-30.4%)."
   },
   {
-    "rank": 4,
+    "rank": 2,
     "vulnerability_id": "h38-v1",
     "host_id": 38,
     "cvss": 7.173261,
@@ -82,18 +39,83 @@
       36
     ],
     "associated_path_display": "0 \u2192 12 \u2192 35 \u2192 38 \u2192 37 \u2192 15 \u2192 14 \u2192 8 \u2192 36",
-    "baseline_weighted_risk": 8.0675,
-    "patched_weighted_risk": 7.306,
-    "estimated_risk_reduction_fraction": 0.094391,
-    "estimated_risk_reduction_percent": 9.4391,
-    "explanation": "h38-v1 on host 38 (CVSS 7.2, exploit prob 0.647) lies on attack path 0 \u2192 12 \u2192 35 \u2192 38 \u2192 37 \u2192 15 \u2192 14 \u2192 8 \u2192 36. Marginal host-compromise enablement: 0.1939 (probability this vulnerability uniquely opens the host). Acts as a bottleneck node traversing 2 attack path(s). Threatens downstream critical assets: [35, 36, 37, 38, 39]. Mitigating it reduces network weighted critical-asset risk from 8.0675 to 7.3060 (-9.4%)."
+    "baseline_weighted_risk": 11.454545,
+    "patched_weighted_risk": 10.30303,
+    "estimated_risk_reduction_fraction": 0.100529,
+    "estimated_risk_reduction_percent": 10.0529,
+    "explanation": "h38-v1 on host 38 (CVSS 7.2, exploit prob 0.647) lies on attack path 0 \u2192 12 \u2192 35 \u2192 38 \u2192 37 \u2192 15 \u2192 14 \u2192 8 \u2192 36. Marginal host-compromise enablement: 0.1939 (probability this vulnerability uniquely opens the host). Acts as a bottleneck node traversing 2 attack path(s). Threatens downstream critical assets: [35, 36, 37, 38, 39]. Mitigating it reduces network weighted critical-asset risk from 11.4545 to 10.3030 (-10.1%)."
+  },
+  {
+    "rank": 3,
+    "vulnerability_id": "h36-v1",
+    "host_id": 36,
+    "cvss": 9.591619,
+    "exploit_probability": 0.948952,
+    "associated_path": [
+      0,
+      12,
+      8,
+      36
+    ],
+    "associated_path_display": "0 \u2192 12 \u2192 8 \u2192 36",
+    "baseline_weighted_risk": 11.454545,
+    "patched_weighted_risk": 10.393939,
+    "estimated_risk_reduction_fraction": 0.092593,
+    "estimated_risk_reduction_percent": 9.2593,
+    "explanation": "h36-v1 on host 36 (CVSS 9.6, exploit prob 0.949) lies on attack path 0 \u2192 12 \u2192 8 \u2192 36. Marginal host-compromise enablement: 0.5640 (probability this vulnerability uniquely opens the host). Acts as a bottleneck node traversing 2 attack path(s). Threatens downstream critical assets: [35, 36, 37, 38, 39]. Mitigating it reduces network weighted critical-asset risk from 11.4545 to 10.3939 (-9.3%)."
+  },
+  {
+    "rank": 4,
+    "vulnerability_id": "h38-v2",
+    "host_id": 38,
+    "cvss": 7.601648,
+    "exploit_probability": 0.700206,
+    "associated_path": [
+      0,
+      12,
+      35,
+      38,
+      37,
+      15,
+      14,
+      8,
+      36
+    ],
+    "associated_path_display": "0 \u2192 12 \u2192 35 \u2192 38 \u2192 37 \u2192 15 \u2192 14 \u2192 8 \u2192 36",
+    "baseline_weighted_risk": 11.454545,
+    "patched_weighted_risk": 10.924242,
+    "estimated_risk_reduction_fraction": 0.046296,
+    "estimated_risk_reduction_percent": 4.6296,
+    "explanation": "h38-v2 on host 38 (CVSS 7.6, exploit prob 0.700) lies on attack path 0 \u2192 12 \u2192 35 \u2192 38 \u2192 37 \u2192 15 \u2192 14 \u2192 8 \u2192 36. Marginal host-compromise enablement: 0.2474 (probability this vulnerability uniquely opens the host). Acts as a bottleneck node traversing 2 attack path(s). Threatens downstream critical assets: [35, 36, 37, 38, 39]. Mitigating it reduces network weighted critical-asset risk from 11.4545 to 10.9242 (-4.6%)."
   },
   {
     "rank": 5,
-    "vulnerability_id": "h37-v1",
-    "host_id": 37,
-    "cvss": 3.905895,
-    "exploit_probability": 0.238237,
+    "vulnerability_id": "h8-v1",
+    "host_id": 8,
+    "cvss": 8.96893,
+    "exploit_probability": 0.871116,
+    "associated_path": [
+      0,
+      12,
+      8,
+      14,
+      13,
+      5,
+      35
+    ],
+    "associated_path_display": "0 \u2192 12 \u2192 8 \u2192 14 \u2192 13 \u2192 5 \u2192 35",
+    "baseline_weighted_risk": 11.454545,
+    "patched_weighted_risk": 10.969697,
+    "estimated_risk_reduction_fraction": 0.042328,
+    "estimated_risk_reduction_percent": 4.2328,
+    "explanation": "h8-v1 on host 8 (CVSS 9.0, exploit prob 0.871) lies on attack path 0 \u2192 12 \u2192 8 \u2192 14 \u2192 13 \u2192 5 \u2192 35. Marginal host-compromise enablement: 0.2450 (probability this vulnerability uniquely opens the host). Acts as a bottleneck node traversing 2 attack path(s). Threatens downstream critical assets: [35, 36, 37, 38, 39]. Mitigating it reduces network weighted critical-asset risk from 11.4545 to 10.9697 (-4.2%)."
+  },
+  {
+    "rank": 6,
+    "vulnerability_id": "h29-v2",
+    "host_id": 29,
+    "cvss": 6.83261,
+    "exploit_probability": 0.604076,
     "associated_path": [
       0,
       29,
@@ -102,32 +124,11 @@
       35
     ],
     "associated_path_display": "0 \u2192 29 \u2192 37 \u2192 38 \u2192 35",
-    "baseline_weighted_risk": 8.0675,
-    "patched_weighted_risk": 7.487,
-    "estimated_risk_reduction_fraction": 0.071955,
-    "estimated_risk_reduction_percent": 7.1955,
-    "explanation": "h37-v1 on host 37 (CVSS 3.9, exploit prob 0.238) lies on attack path 0 \u2192 29 \u2192 37 \u2192 38 \u2192 35. Marginal host-compromise enablement: 0.1908 (probability this vulnerability uniquely opens the host). Acts as a bottleneck node traversing 3 attack path(s). Threatens downstream critical assets: [35, 36, 37, 38, 39]. Mitigating it reduces network weighted critical-asset risk from 8.0675 to 7.4870 (-7.2%)."
-  },
-  {
-    "rank": 6,
-    "vulnerability_id": "h26-v2",
-    "host_id": 26,
-    "cvss": 8.991584,
-    "exploit_probability": 0.873948,
-    "associated_path": [
-      0,
-      29,
-      26,
-      25,
-      10,
-      35
-    ],
-    "associated_path_display": "0 \u2192 29 \u2192 26 \u2192 25 \u2192 10 \u2192 35",
-    "baseline_weighted_risk": 8.0675,
-    "patched_weighted_risk": 7.599,
-    "estimated_risk_reduction_fraction": 0.058073,
-    "estimated_risk_reduction_percent": 5.8073,
-    "explanation": "h26-v2 on host 26 (CVSS 9.0, exploit prob 0.874) lies on attack path 0 \u2192 29 \u2192 26 \u2192 25 \u2192 10 \u2192 35. Marginal host-compromise enablement: 0.1152 (probability this vulnerability uniquely opens the host). Acts as a bottleneck node traversing 5 attack path(s). Threatens downstream critical assets: [35, 36, 37, 38, 39]. Mitigating it reduces network weighted critical-asset risk from 8.0675 to 7.5990 (-5.8%)."
+    "baseline_weighted_risk": 11.454545,
+    "patched_weighted_risk": 11.0,
+    "estimated_risk_reduction_fraction": 0.039683,
+    "estimated_risk_reduction_percent": 3.9683,
+    "explanation": "h29-v2 on host 29 (CVSS 6.8, exploit prob 0.604) lies on attack path 0 \u2192 29 \u2192 37 \u2192 38 \u2192 35. Marginal host-compromise enablement: 0.1490 (probability this vulnerability uniquely opens the host). Acts as a bottleneck node traversing 5 attack path(s). Threatens downstream critical assets: [35, 36, 37, 38, 39]. Mitigating it reduces network weighted critical-asset risk from 11.4545 to 11.0000 (-4.0%)."
   },
   {
     "rank": 7,
@@ -144,40 +145,39 @@
       35
     ],
     "associated_path_display": "0 \u2192 29 \u2192 26 \u2192 25 \u2192 10 \u2192 35",
-    "baseline_weighted_risk": 8.0675,
-    "patched_weighted_risk": 7.623,
-    "estimated_risk_reduction_fraction": 0.055098,
-    "estimated_risk_reduction_percent": 5.5098,
-    "explanation": "h26-v1 on host 26 (CVSS 8.9, exploit prob 0.868) lies on attack path 0 \u2192 29 \u2192 26 \u2192 25 \u2192 10 \u2192 35. Marginal host-compromise enablement: 0.1094 (probability this vulnerability uniquely opens the host). Acts as a bottleneck node traversing 5 attack path(s). Threatens downstream critical assets: [35, 36, 37, 38, 39]. Mitigating it reduces network weighted critical-asset risk from 8.0675 to 7.6230 (-5.5%)."
+    "baseline_weighted_risk": 11.454545,
+    "patched_weighted_risk": 11.030303,
+    "estimated_risk_reduction_fraction": 0.037037,
+    "estimated_risk_reduction_percent": 3.7037,
+    "explanation": "h26-v1 on host 26 (CVSS 8.9, exploit prob 0.868) lies on attack path 0 \u2192 29 \u2192 26 \u2192 25 \u2192 10 \u2192 35. Marginal host-compromise enablement: 0.1094 (probability this vulnerability uniquely opens the host). Acts as a bottleneck node traversing 5 attack path(s). Threatens downstream critical assets: [35, 36, 37, 38, 39]. Mitigating it reduces network weighted critical-asset risk from 11.4545 to 11.0303 (-3.7%)."
   },
   {
     "rank": 8,
-    "vulnerability_id": "h8-v1",
-    "host_id": 8,
-    "cvss": 8.96893,
-    "exploit_probability": 0.871116,
+    "vulnerability_id": "h26-v2",
+    "host_id": 26,
+    "cvss": 8.991584,
+    "exploit_probability": 0.873948,
     "associated_path": [
       0,
-      12,
-      8,
-      14,
-      13,
-      5,
+      29,
+      26,
+      25,
+      10,
       35
     ],
-    "associated_path_display": "0 \u2192 12 \u2192 8 \u2192 14 \u2192 13 \u2192 5 \u2192 35",
-    "baseline_weighted_risk": 8.0675,
-    "patched_weighted_risk": 7.6325,
-    "estimated_risk_reduction_fraction": 0.05392,
-    "estimated_risk_reduction_percent": 5.392,
-    "explanation": "h8-v1 on host 8 (CVSS 9.0, exploit prob 0.871) lies on attack path 0 \u2192 12 \u2192 8 \u2192 14 \u2192 13 \u2192 5 \u2192 35. Marginal host-compromise enablement: 0.2450 (probability this vulnerability uniquely opens the host). Acts as a bottleneck node traversing 2 attack path(s). Threatens downstream critical assets: [35, 36, 37, 38, 39]. Mitigating it reduces network weighted critical-asset risk from 8.0675 to 7.6325 (-5.4%)."
+    "associated_path_display": "0 \u2192 29 \u2192 26 \u2192 25 \u2192 10 \u2192 35",
+    "baseline_weighted_risk": 11.454545,
+    "patched_weighted_risk": 11.136364,
+    "estimated_risk_reduction_fraction": 0.027778,
+    "estimated_risk_reduction_percent": 2.7778,
+    "explanation": "h26-v2 on host 26 (CVSS 9.0, exploit prob 0.874) lies on attack path 0 \u2192 29 \u2192 26 \u2192 25 \u2192 10 \u2192 35. Marginal host-compromise enablement: 0.1152 (probability this vulnerability uniquely opens the host). Acts as a bottleneck node traversing 5 attack path(s). Threatens downstream critical assets: [35, 36, 37, 38, 39]. Mitigating it reduces network weighted critical-asset risk from 11.4545 to 11.1364 (-2.8%)."
   },
   {
     "rank": 9,
-    "vulnerability_id": "h37-v2",
-    "host_id": 37,
-    "cvss": 3.592446,
-    "exploit_probability": 0.199056,
+    "vulnerability_id": "h29-v1",
+    "host_id": 29,
+    "cvss": 8.026431,
+    "exploit_probability": 0.753304,
     "associated_path": [
       0,
       29,
@@ -186,11 +186,11 @@
       35
     ],
     "associated_path_display": "0 \u2192 29 \u2192 37 \u2192 38 \u2192 35",
-    "baseline_weighted_risk": 8.0675,
-    "patched_weighted_risk": 7.652,
-    "estimated_risk_reduction_fraction": 0.051503,
-    "estimated_risk_reduction_percent": 5.1503,
-    "explanation": "h37-v2 on host 37 (CVSS 3.6, exploit prob 0.199) lies on attack path 0 \u2192 29 \u2192 37 \u2192 38 \u2192 35. Marginal host-compromise enablement: 0.1516 (probability this vulnerability uniquely opens the host). Acts as a bottleneck node traversing 3 attack path(s). Threatens downstream critical assets: [35, 36, 37, 38, 39]. Mitigating it reduces network weighted critical-asset risk from 8.0675 to 7.6520 (-5.2%)."
+    "baseline_weighted_risk": 11.454545,
+    "patched_weighted_risk": 11.151515,
+    "estimated_risk_reduction_fraction": 0.026455,
+    "estimated_risk_reduction_percent": 2.6455,
+    "explanation": "h29-v1 on host 29 (CVSS 8.0, exploit prob 0.753) lies on attack path 0 \u2192 29 \u2192 37 \u2192 38 \u2192 35. Marginal host-compromise enablement: 0.2983 (probability this vulnerability uniquely opens the host). Acts as a bottleneck node traversing 5 attack path(s). Threatens downstream critical assets: [35, 36, 37, 38, 39]. Mitigating it reduces network weighted critical-asset risk from 11.4545 to 11.1515 (-2.6%)."
   },
   {
     "rank": 10,
@@ -204,10 +204,10 @@
       35
     ],
     "associated_path_display": "0 \u2192 12 \u2192 35",
-    "baseline_weighted_risk": 8.0675,
-    "patched_weighted_risk": 7.785,
-    "estimated_risk_reduction_fraction": 0.035017,
-    "estimated_risk_reduction_percent": 3.5017,
-    "explanation": "h35-v1 on host 35 (CVSS 6.8, exploit prob 0.596) lies on attack path 0 \u2192 12 \u2192 35. Marginal host-compromise enablement: 0.2680 (probability this vulnerability uniquely opens the host). Acts as a bottleneck node traversing 3 attack path(s). Threatens downstream critical assets: [35, 36, 37, 38, 39]. Mitigating it reduces network weighted critical-asset risk from 8.0675 to 7.7850 (-3.5%)."
+    "baseline_weighted_risk": 11.454545,
+    "patched_weighted_risk": 11.212121,
+    "estimated_risk_reduction_fraction": 0.021164,
+    "estimated_risk_reduction_percent": 2.1164,
+    "explanation": "h35-v1 on host 35 (CVSS 6.8, exploit prob 0.596) lies on attack path 0 \u2192 12 \u2192 35. Marginal host-compromise enablement: 0.2680 (probability this vulnerability uniquely opens the host). Acts as a bottleneck node traversing 3 attack path(s). Threatens downstream critical assets: [35, 36, 37, 38, 39]. Mitigating it reduces network weighted critical-asset risk from 11.4545 to 11.2121 (-2.1%)."
   }
 ]

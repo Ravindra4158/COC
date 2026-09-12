@@ -1,9 +1,9 @@
 {
   "max_allowed_simulations": 4000,
   "monte_carlo_trials_drawn": 2000,
-  "total_simulations_used": 3971,
+  "total_simulations_used": 3980,
   "within_budget": true,
   "method": "Synchronized Monte Carlo with Common Random Numbers (CRN) using PCG64 uniform exploit draws and deciding-vote counterfactual masks.",
-  "baseline_weighted_risk": 12.707,
-  "runtime_seconds": 0.7463
+  "baseline_weighted_risk": 14.6035,
+  "runtime_seconds": 0.2669
 }

@@ -23,8 +23,11 @@ from __future__ import annotations
 
 import argparse
 import csv
+import hashlib
 import json
 import math
+import re
+from datetime import datetime
 from collections import defaultdict
 from dataclasses import dataclass
 from pathlib import Path
@@ -36,9 +39,9 @@ import networkx as nx
 import numpy as np
 
 # ── Development instance default parameters ──────────────────────────────────
-DEFAULT_SEED             = 20260911
+DEFAULT_SEED             = 20260912
 DEFAULT_N_HOSTS          = 40
-DEFAULT_EDGE_PROB        = 0.09
+DEFAULT_EDGE_PROB        = 0.06
 DEFAULT_ENTRY_NODES      = [0, 1]
 DEFAULT_CRITICAL_WEIGHTS = {35: 1.0, 36: 2.0, 37: 3.0, 38: 4.0, 39: 5.0}
 DEFAULT_VULNS_PER_HOST   = 2
@@ -46,6 +49,33 @@ DEFAULT_CVSS_MIN         = 3.0
 DEFAULT_CVSS_MAX         = 9.8
 MAX_SIMULATION_BUDGET    = 4_000
 DEFAULT_TOP_K            = 10
+
+
+def parse_seed(seed: Any, default: int = DEFAULT_SEED) -> int:
+    """Parse seed from any format: int, date string ('2026-09-11', 'today'), or hash."""
+    if seed is None or seed == "":
+        return default
+    if isinstance(seed, (int, np.integer)):
+        return int(seed)
+    if isinstance(seed, float):
+        return int(seed)
+    if isinstance(seed, str):
+        s = seed.strip()
+        try:
+            return int(s)
+        except ValueError:
+            pass
+        if s.lower() in ("today", "now", "current"):
+            return int(datetime.now().strftime("%Y%m%d"))
+        m1 = re.match(r"^(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})$", s)
+        if m1:
+            return int(f"{int(m1.group(1)):04d}{int(m1.group(2)):02d}{int(m1.group(3)):02d}")
+        m2 = re.match(r"^(\d{1,2})[-/.](\d{1,2})[-/.](\d{4})$", s)
+        if m2:
+            return int(f"{int(m2.group(3)):04d}{int(m2.group(2)):02d}{int(m2.group(1)):02d}")
+        return int(hashlib.sha256(s.encode("utf-8")).hexdigest()[:8], 16)
+    return default
+
 
 
 # ── Data structures ──────────────────────────────────────────────────────────
@@ -145,14 +175,14 @@ def load_from_csv(
         reader = csv.DictReader(f)
         for row in reader:
             row_clean = {k.strip().lower(): v for k, v in row.items() if k}
-            h_id = _clean_str(row_clean.get("host_id"))
+            h_id = _clean_str(row_clean.get("host_id", row_clean.get("host", row_clean.get("node_id", row_clean.get("node", row_clean.get("id"))))))
             if not h_id:
                 continue
             # Preserve numeric types if purely integer
             if h_id.isdigit():
                 h_id = int(h_id)
             node_set.add(h_id)
-            is_entry = _as_bool(row_clean.get("is_entry_point", False))
+            is_entry = _as_bool(row_clean.get("is_entry_point", row_clean.get("is_entry", row_clean.get("entry_point", row_clean.get("entry", False)))))
             if is_entry:
                 entry_nodes.append(h_id)
             graph.add_node(h_id, is_entry_point=is_entry, name=row_clean.get("name", str(h_id)))
@@ -162,8 +192,8 @@ def load_from_csv(
         reader = csv.DictReader(f)
         for row in reader:
             row_clean = {k.strip().lower(): v for k, v in row.items() if k}
-            src = _clean_str(row_clean.get("source", row_clean.get("src", row_clean.get("source_host"))))
-            dst = _clean_str(row_clean.get("target", row_clean.get("dst", row_clean.get("target_host"))))
+            src = _clean_str(row_clean.get("source", row_clean.get("src", row_clean.get("from", row_clean.get("source_host")))))
+            dst = _clean_str(row_clean.get("target", row_clean.get("dst", row_clean.get("to", row_clean.get("target_host")))))
             if not src or not dst:
                 continue
             if src.isdigit():
@@ -183,20 +213,21 @@ def load_from_csv(
         reader = csv.DictReader(f)
         for row in reader:
             row_clean = {k.strip().lower(): v for k, v in row.items() if k}
-            h_id = _clean_str(row_clean.get("host_id", row_clean.get("asset_id")))
+            h_id = _clean_str(row_clean.get("host_id", row_clean.get("asset_id", row_clean.get("node_id", row_clean.get("host", row_clean.get("id"))))))
             if not h_id:
                 continue
             if h_id.isdigit():
                 h_id = int(h_id)
-            crit_val = row_clean.get("criticality", row_clean.get("impact_weight", row_clean.get("weight", "1.0")))
+            crit_val = row_clean.get("criticality", row_clean.get("impact_weight", row_clean.get("weight", row_clean.get("impact", row_clean.get("value", "1.0")))))
             try:
                 weight = float(crit_val) if crit_val else 1.0
             except ValueError:
                 weight = 1.0
             critical_weights[h_id] = weight
-            if h_id in graph:
-                graph.nodes[h_id]["is_critical"] = True
-                graph.nodes[h_id]["criticality"] = weight
+            if h_id not in graph:
+                graph.add_node(h_id)
+            graph.nodes[h_id]["is_critical"] = True
+            graph.nodes[h_id]["criticality"] = weight
 
     # Infer entry nodes if none flagged
     if not entry_nodes:
@@ -214,18 +245,21 @@ def load_from_csv(
         reader = csv.DictReader(f)
         for row in reader:
             row_clean = {k.strip().lower(): v for k, v in row.items() if k}
-            vid = _clean_str(row_clean.get("vuln_id", row_clean.get("vulnerability_id")))
-            hid = _clean_str(row_clean.get("host_id"))
+            vid = _clean_str(row_clean.get("vuln_id", row_clean.get("vulnerability_id", row_clean.get("cve", row_clean.get("vuln", row_clean.get("id"))))))
+            hid = _clean_str(row_clean.get("host_id", row_clean.get("host", row_clean.get("node_id", row_clean.get("node")))))
             if not vid or not hid:
                 continue
             if hid.isdigit():
                 hid = int(hid)
-            cvss_str = row_clean.get("cvss", "5.0")
+            if hid not in graph:
+                graph.add_node(hid)
+            cvss_str = row_clean.get("cvss", row_clean.get("cvss_score", row_clean.get("severity", row_clean.get("score", "5.0"))))
             try:
                 cvss_val = float(cvss_str)
             except ValueError:
                 cvss_val = 5.0
-            prob_str = row_clean.get("exploit_probability", row_clean.get("probability"))
+            cvss_val = min(10.0, max(0.0, cvss_val))
+            prob_str = row_clean.get("exploit_probability", row_clean.get("probability", row_clean.get("prob", row_clean.get("exploit_prob"))))
             if prob_str:
                 try:
                     prob_val = float(prob_str)
@@ -357,6 +391,137 @@ def evaluate_all(
     return baseline_risk, patch_values, individual_enablement
 
 
+def evaluate_defense_cascade(
+    graph: nx.Graph,
+    vulns: list[Vuln],
+    entry_nodes: list[Any],
+    critical_weights: dict[Any, float],
+    n_sims: int = MAX_SIMULATION_BUDGET,
+    seed: int = DEFAULT_SEED,
+    max_steps: int = 10,
+) -> list[dict[str, Any]]:
+    """Greedy sequential host-remediation cascade: patch entire hosts until risk = 0.
+
+    At each step, picks the host whose full remediation (all vulns forced to fail)
+    gives the largest marginal risk drop.  Reuses CRN draws from *evaluate_all*
+    for variance-free comparison.
+
+    Returns a list of cascade steps, each containing:
+      - step, host_id, vulns_patched, risk_before, risk_after,
+        cumulative_reduction_pct, is_fully_secure
+    """
+    nodes = list(graph.nodes)
+    n_nodes = len(nodes)
+    node_to_idx = {n: i for i, n in enumerate(nodes)}
+    n_v = len(vulns)
+
+    entry_indices = [node_to_idx[e] for e in entry_nodes if e in node_to_idx]
+    if not entry_indices:
+        return []
+
+    crit_weights_arr = np.zeros(n_nodes, dtype=float)
+    for c, w in critical_weights.items():
+        if c in node_to_idx:
+            crit_weights_arr[node_to_idx[c]] = float(w)
+
+    # Pre-draw random matrices (same RNG stream as evaluate_all)
+    rng = np.random.Generator(np.random.PCG64(seed))
+    draws = rng.random((n_sims, n_v))
+    entries = rng.integers(0, len(entry_indices), size=n_sims)
+
+    probs = np.array([v.prob for v in vulns])
+    success = draws < probs
+
+    host_vuln_idx: dict[int, list[int]] = defaultdict(list)
+    for i, v in enumerate(vulns):
+        if v.host in node_to_idx:
+            host_vuln_idx[node_to_idx[v.host]].append(i)
+
+    # Build adjacency list
+    adj: list[list[int]] = [[] for _ in range(n_nodes)]
+    for u, v in graph.edges():
+        if u in node_to_idx and v in node_to_idx:
+            ui, vi = node_to_idx[u], node_to_idx[v]
+            adj[ui].append(vi)
+            adj[vi].append(ui)
+
+    def _bfs_risk_vec(mask: np.ndarray, trial: int) -> float:
+        entry = entry_indices[entries[trial]]
+        comp = {entry}
+        queue = [entry]
+        qi = 0
+        while qi < len(queue):
+            u = queue[qi]
+            qi += 1
+            for nb in adj[u]:
+                if nb not in comp and mask[nb]:
+                    comp.add(nb)
+                    queue.append(nb)
+        return float(sum(crit_weights_arr[c] for c in comp if crit_weights_arr[c] > 0))
+
+    # Current state
+    current_host_ok = np.zeros((n_sims, n_nodes), dtype=bool)
+    for h_i, idxs in host_vuln_idx.items():
+        current_host_ok[:, h_i] = success[:, idxs].any(axis=1)
+
+    # Compute initial baseline
+    baseline_risks = np.array([_bfs_risk_vec(current_host_ok[t], t) for t in range(n_sims)])
+    initial_risk = float(baseline_risks.mean())
+
+    entry_idx_set = set(entry_indices)
+    patched_hosts: set[int] = set()
+    cascade: list[dict[str, Any]] = []
+
+    current_risk = initial_risk
+    for step in range(1, max_steps + 1):
+        if current_risk <= 0.0:
+            break
+
+        best_host_idx: int | None = None
+        best_risk = current_risk
+
+        # Find the host whose remediation gives the largest marginal drop
+        for h_idx in range(n_nodes):
+            if h_idx in patched_hosts or h_idx in entry_idx_set:
+                continue
+            test_ok = current_host_ok.copy()
+            test_ok[:, h_idx] = False
+            test_risks = np.array([_bfs_risk_vec(test_ok[t], t) for t in range(n_sims)])
+            mean_risk = float(test_risks.mean())
+            if mean_risk < best_risk:
+                best_risk = mean_risk
+                best_host_idx = h_idx
+
+        if best_host_idx is None:
+            break
+
+        # Apply the patch
+        patched_hosts.add(best_host_idx)
+        current_host_ok[:, best_host_idx] = False
+        host_name = nodes[best_host_idx]
+        patched_vids = [v.vid for v in vulns if v.host == host_name]
+
+        cumulative_pct = round(100.0 * (1.0 - best_risk / initial_risk), 2) if initial_risk > 0 else 100.0
+        is_secure = best_risk <= 0.0
+
+        cascade.append({
+            "step": step,
+            "host_id": host_name,
+            "vulnerabilities_patched": patched_vids,
+            "risk_before": round(current_risk, 6),
+            "risk_after": round(best_risk, 6),
+            "marginal_reduction": round(current_risk - best_risk, 6),
+            "cumulative_reduction_percent": cumulative_pct,
+            "is_fully_secure": is_secure,
+        })
+
+        current_risk = best_risk
+        if is_secure:
+            break
+
+    return cascade
+
+
 # ── 4. Loop-Free Simple Attack Path Witnesses ─────────────────────────────────
 
 def find_path(
@@ -462,7 +627,7 @@ def run_prioritization(
     edges_file: Path | None = None,
     vulns_file: Path | None = None,
     critical_assets_file: Path | None = None,
-    seed: int = DEFAULT_SEED,
+    seed: int | str | None = DEFAULT_SEED,
     n_sims: int = MAX_SIMULATION_BUDGET,
     top_k: int = DEFAULT_TOP_K,
     output_dir: Path = Path("output"),
@@ -470,6 +635,7 @@ def run_prioritization(
 ) -> dict[str, Any]:
     t0 = perf_counter()
     n_sims = min(MAX_SIMULATION_BUDGET, max(10, n_sims))
+    actual_seed = parse_seed(seed, DEFAULT_SEED)
 
     # Determine execution mode: CSV files vs Synthetic development instance
     use_csv = False
@@ -491,9 +657,9 @@ def run_prioritization(
             hosts_file, edges_file, vulns_file, critical_assets_file
         )
     else:
-        print(f"Constructing development instance: n={DEFAULT_N_HOSTS}, p={DEFAULT_EDGE_PROB}, seed={seed}...")
-        graph = build_synthetic_graph(DEFAULT_N_HOSTS, DEFAULT_EDGE_PROB, seed=seed)
-        vulns = build_synthetic_vulns(list(sorted(graph.nodes)), DEFAULT_VULNS_PER_HOST, seed=seed)
+        print(f"Constructing development instance: n={DEFAULT_N_HOSTS}, p={DEFAULT_EDGE_PROB}, seed={actual_seed}...")
+        graph = build_synthetic_graph(DEFAULT_N_HOSTS, DEFAULT_EDGE_PROB, seed=actual_seed)
+        vulns = build_synthetic_vulns(list(sorted(graph.nodes, key=_node_sort_key)), DEFAULT_VULNS_PER_HOST, seed=actual_seed)
         entry_nodes = list(DEFAULT_ENTRY_NODES)
         critical_weights = dict(DEFAULT_CRITICAL_WEIGHTS)
 
@@ -503,7 +669,13 @@ def run_prioritization(
 
     # Run Synchronized Monte Carlo counterfactual evaluation
     baseline_risk, patch_values, indiv_enablement = evaluate_all(
-        graph, vulns, entry_nodes, critical_weights, n_sims=n_sims, seed=seed
+        graph, vulns, entry_nodes, critical_weights, n_sims=n_sims, seed=actual_seed
+    )
+
+    # Run greedy sequential defense cascade until 100% secure
+    print("Running defense cascade simulation...")
+    cascade = evaluate_defense_cascade(
+        graph, vulns, entry_nodes, critical_weights, n_sims=n_sims, seed=actual_seed
     )
 
     # Compute features, priority scores, and paths
@@ -587,7 +759,24 @@ def run_prioritization(
         json.dumps(plan, indent=2, default=str), encoding="utf-8"
     )
 
-    # 3. Output simulation_report.json
+    # 3. Output defense_cascade.json — sequential host remediation to 100% security
+    hosts_to_full_security = len(cascade)
+    cascade_output = {
+        "baseline_weighted_risk": round(baseline_risk, 6),
+        "hosts_to_full_security": hosts_to_full_security,
+        "monte_carlo_trials": n_sims,
+        "method": (
+            "Greedy sequential host remediation: at each step, all vulnerabilities on "
+            "the most impactful host are patched simultaneously. The simulation re-evaluates "
+            "risk via CRN after each host is remediated, continuing until risk reaches 0.0."
+        ),
+        "cascade": cascade,
+    }
+    (output_dir / "defense_cascade.json").write_text(
+        json.dumps(cascade_output, indent=2, default=str), encoding="utf-8"
+    )
+
+    # 4. Output simulation_report.json
     elapsed = round(perf_counter() - t0, 4)
     sim_report = {
         "max_allowed_simulations": MAX_SIMULATION_BUDGET,
@@ -604,13 +793,18 @@ def run_prioritization(
         "total_vulnerabilities": len(vulns),
         "vulnerabilities_with_measurable_patch_value": sum(1 for v in patch_values.values() if v > 0),
         "top_k": len(plan),
+        "defense_cascade": {
+            "hosts_to_full_security": hosts_to_full_security,
+            "hosts_patched": [s["host_id"] for s in cascade],
+            "final_risk": cascade[-1]["risk_after"] if cascade else baseline_risk,
+        },
         "runtime_seconds": elapsed,
     }
     (output_dir / "simulation_report.json").write_text(
         json.dumps(sim_report, indent=2), encoding="utf-8"
     )
 
-    # 4. Output technical_explanations.md
+    # 5. Output technical_explanations.md
     md_lines = [
         "# Technical Explanations — Top-10 Patch Recommendations",
         "",
@@ -639,14 +833,51 @@ def run_prioritization(
             "---",
             "",
         ])
+
+    # Defense cascade section
+    md_lines.extend([
+        "",
+        "# Defense Cascade — Path to 100% Security",
+        "",
+        f"Starting from a baseline weighted critical-asset risk of **{baseline_risk:.4f}**, "
+        f"the following greedy sequential host remediations reduce risk to **0.0** "
+        f"in **{hosts_to_full_security}** steps.",
+        "",
+        "| Step | Host Remediated | Vulns Patched | Risk Before | Risk After | Cumulative Reduction |",
+        "|------|----------------|---------------|-------------|------------|---------------------|",
+    ])
+    for s in cascade:
+        vids = ", ".join(str(v) for v in s["vulnerabilities_patched"])
+        secure_marker = " ✅ **100% SECURE**" if s["is_fully_secure"] else ""
+        md_lines.append(
+            f"| {s['step']} | Host {s['host_id']} | {vids} | "
+            f"{s['risk_before']:.4f} | {s['risk_after']:.4f} | "
+            f"**-{s['cumulative_reduction_percent']:.1f}%**{secure_marker} |"
+        )
+    md_lines.extend(["", "---", ""])
+
     (output_dir / "technical_explanations.md").write_text("\n".join(md_lines), encoding="utf-8")
 
+    # Console output
     print(f"\nCompleted in {elapsed:.2f}s!")
     print(f"Baseline risk: {baseline_risk:.4f}")
     print(f"Top-{len(plan)} recommendations saved to {output_dir / 'top10_patch_plan.json'}")
     print(f"Ranked list saved to {output_dir / 'ranked_vulnerabilities.csv'}")
     print(f"Simulation report saved to {output_dir / 'simulation_report.json'}")
     print(f"Technical explanations saved to {output_dir / 'technical_explanations.md'}")
+    print(f"\n{'='*60}")
+    print(f"DEFENSE CASCADE — Path to 100% Security")
+    print(f"{'='*60}")
+    for s in cascade:
+        status = "✅ 100% SECURE" if s["is_fully_secure"] else ""
+        print(
+            f"  Step {s['step']}: Patch Host {s['host_id']} "
+            f"({', '.join(str(v) for v in s['vulnerabilities_patched'])}) → "
+            f"Risk {s['risk_before']:.4f} → {s['risk_after']:.4f} "
+            f"(-{s['cumulative_reduction_percent']:.1f}%) {status}"
+        )
+    print(f"{'='*60}")
+    print(f"Defense cascade saved to {output_dir / 'defense_cascade.json'}")
 
     return {
         "graph": graph,
@@ -655,6 +886,7 @@ def run_prioritization(
         "rows": rows,
         "top10": plan,
         "report": sim_report,
+        "defense_cascade": cascade,
     }
 
 
@@ -665,7 +897,7 @@ def main() -> None:
     parser.add_argument("--edges", type=str, default=None, help="Path to network_edges.csv")
     parser.add_argument("--vulns", type=str, default=None, help="Path to vulnerabilities.csv")
     parser.add_argument("--critical-assets", type=str, default=None, help="Path to critical_assets.csv")
-    parser.add_argument("--seed", type=int, default=DEFAULT_SEED, help="Random seed for graph and simulation")
+    parser.add_argument("--seed", type=str, default=str(DEFAULT_SEED), help="Random seed or date (e.g. 20260911, 2026-09-11, today) for graph and simulation")
     parser.add_argument("--simulations", type=int, default=MAX_SIMULATION_BUDGET, help="Monte Carlo simulation budget (max 4000)")
     parser.add_argument("--top-k", type=int, default=DEFAULT_TOP_K, help="Number of patch recommendations")
     parser.add_argument("--output-dir", type=str, default="output", help="Output directory")

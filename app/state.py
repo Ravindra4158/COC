@@ -2,6 +2,7 @@ from datetime import datetime, timezone
 from threading import Lock
 from typing import Any
 
+from src.data.loader import parse_seed
 from src.pipeline import run_analysis
 
 _cache: dict[str, Any] = {
@@ -16,16 +17,18 @@ _lock = Lock()
 def get_analysis(
     force: bool = False,
     disabled_vulnerabilities: list[str] | None = None,
-    seed: int | None = None,
+    seed: int | str | None = None,
 ) -> dict[str, Any]:
     with _lock:
         state_changed = False
         if disabled_vulnerabilities is not None and sorted(disabled_vulnerabilities) != sorted(_cache.get("disabled_vulnerabilities", [])):
             _cache["disabled_vulnerabilities"] = list(disabled_vulnerabilities)
             state_changed = True
-        if seed is not None and seed != _cache.get("seed"):
-            _cache["seed"] = seed
-            state_changed = True
+        if seed is not None:
+            parsed_seed = parse_seed(seed)
+            if parsed_seed != _cache.get("seed"):
+                _cache["seed"] = parsed_seed
+                state_changed = True
 
         if force or state_changed or _cache["result"] is None:
             _cache["result"] = run_analysis(

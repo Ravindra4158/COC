@@ -181,8 +181,12 @@
       "bases:Create new base": false
     }
   },
-  "active": "18f3f9df7d0de50d",
+  "active": "e672bf935697c55c",
   "lastOpenFiles": [
+    "screenshots/README.md",
+    "screenshots",
+    "question.md",
+    "output/defense_cascade.json",
     "tests/__pycache__/test_csv_generalization.cpython-314-pytest-9.1.1.pyc",
     "tests/test_csv_generalization.py",
     "output/technical_explanations.md",
@@ -192,9 +196,6 @@
     "src/__pycache__/pipeline.cpython-314.pyc.139838932479744",
     "LICENSE",
     "output/simulation_report.json",
-    "output/top10_patch_plan.json",
-    "frontend/dist/index.html",
-    "frontend/dist/assets/index-DiKtjEZw.js",
     "frontend/node_modules/@oxc-project/types/README.md",
     "graphify-challenge-submission/output/technical_explanations.md",
     "README.md",

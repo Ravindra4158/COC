@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 
-const SEED_OPTIONS = [
-  { val: 20260911, label: 'Dev Instance (20260911)' },
-  { val: 42, label: 'Evaluator Seed (42)' },
-  { val: 1337, label: 'Adversarial Seed (1337)' },
-];
+const getTodayVal = () => {
+  const now = new Date();
+  const y = now.getFullYear();
+  const m = String(now.getMonth() + 1).padStart(2, '0');
+  const d = String(now.getDate()).padStart(2, '0');
+  return parseInt(`${y}${m}${d}`, 10);
+};
 
 export default function TopNavbar({
   running,
@@ -15,6 +17,16 @@ export default function TopNavbar({
   onResetState,
 }) {
   const [utcTime, setUtcTime] = useState('');
+  const todayVal = getTodayVal();
+  const [customInput, setCustomInput] = useState('');
+  const [showCustom, setShowCustom] = useState(false);
+
+  const SEED_OPTIONS = [
+    { val: 20260911, label: 'Dev Instance (20260911)' },
+    { val: todayVal, label: `Today's Date (${todayVal})` },
+    { val: 42, label: 'Evaluator Seed (42)' },
+    { val: 1337, label: 'Adversarial Seed (1337)' },
+  ];
 
   useEffect(() => {
     const update = () => {
@@ -25,6 +37,14 @@ export default function TopNavbar({
     const interval = setInterval(update, 1000);
     return () => clearInterval(interval);
   }, []);
+
+  const handleCustomSubmit = (e) => {
+    e.preventDefault();
+    if (customInput.trim()) {
+      onChangeSeed(customInput.trim());
+      setShowCustom(false);
+    }
+  };
 
   return (
     <header className="cyber-topbar">
@@ -59,19 +79,61 @@ export default function TopNavbar({
         {/* Seed Selector */}
         <div className="seed-control-group">
           <label className="control-label">TOPOLOGY</label>
-          <select
-            className="cyber-select"
-            value={activeSeed || 20260911}
-            onChange={e => onChangeSeed(Number(e.target.value))}
-            disabled={running}
-          >
-            {SEED_OPTIONS.map(opt => (
-              <option key={opt.val} value={opt.val}>
-                {opt.label}
-              </option>
-            ))}
-          </select>
+          {!showCustom ? (
+            <select
+              className="cyber-select"
+              value={activeSeed || 20260911}
+              onChange={e => {
+                if (e.target.value === 'custom') {
+                  setShowCustom(true);
+                } else {
+                  onChangeSeed(Number(e.target.value));
+                }
+              }}
+              disabled={running}
+            >
+              {SEED_OPTIONS.map(opt => (
+                <option key={opt.val} value={opt.val}>
+                  {opt.label}
+                </option>
+              ))}
+              <option value="custom">Custom Seed / Date...</option>
+            </select>
+          ) : (
+            <form onSubmit={handleCustomSubmit} style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+              <input
+                type="text"
+                className="cyber-select"
+                style={{ width: '130px', padding: '2px 8px' }}
+                placeholder="e.g. 2026-09-12 or 99"
+                value={customInput}
+                onChange={e => setCustomInput(e.target.value)}
+                autoFocus
+              />
+              <button type="submit" className="cyber-btn cyber-btn-ghost" style={{ padding: '4px 8px' }}>
+                SET
+              </button>
+              <button
+                type="button"
+                className="cyber-btn cyber-btn-ghost"
+                style={{ padding: '4px 8px' }}
+                onClick={() => setShowCustom(false)}
+              >
+                ✕
+              </button>
+            </form>
+          )}
         </div>
+
+        {/* Quick Today's Date Button */}
+        <button
+          className="cyber-btn cyber-btn-ghost"
+          onClick={() => onChangeSeed(todayVal)}
+          disabled={running}
+          title={`Switch directly to today's date seed (${todayVal})`}
+        >
+          TODAY
+        </button>
 
         {/* Reset State if active patches or custom seed */}
         {(activePatches?.length > 0 || (activeSeed && activeSeed !== 20260911)) && (

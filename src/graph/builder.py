@@ -46,16 +46,41 @@ def build_network_graph(
             if hasattr(row, column):
                 value = getattr(row, column)
                 graph.nodes[row.host_id][column] = _as_bool(value) if column == "is_entry_point" else value
-    graph.add_edges_from((row.source, row.target) for row in network_edges.itertuples(index=False))
+
+    for row in network_edges.itertuples(index=False):
+        src, dst = row.source, row.target
+        if src not in graph:
+            graph.add_node(src, host_id=src, vulnerabilities=[], is_critical=False, is_entry_point=False)
+        if dst not in graph:
+            graph.add_node(dst, host_id=dst, vulnerabilities=[], is_critical=False, is_entry_point=False)
+        graph.add_edge(src, dst)
+
     if vulnerabilities is not None:
         for row in vulnerabilities.itertuples(index=False):
+            if row.host_id not in graph:
+                graph.add_node(row.host_id, host_id=row.host_id, vulnerabilities=[], is_critical=False, is_entry_point=False)
+            if "vulnerabilities" not in graph.nodes[row.host_id]:
+                graph.nodes[row.host_id]["vulnerabilities"] = []
             graph.nodes[row.host_id]["vulnerabilities"].append(row.vuln_id)
+
     if critical_assets is not None:
         for row in critical_assets.itertuples(index=False):
+            if row.host_id not in graph:
+                graph.add_node(row.host_id, host_id=row.host_id, vulnerabilities=[], is_critical=True, is_entry_point=False)
             attributes = graph.nodes[row.host_id]
             attributes["is_critical"] = True
             if hasattr(row, "criticality"):
                 attributes["criticality"] = row.criticality
+
+    # Guarantee all nodes have required attributes
+    for n in graph.nodes:
+        if "vulnerabilities" not in graph.nodes[n]:
+            graph.nodes[n]["vulnerabilities"] = []
+        if "is_critical" not in graph.nodes[n]:
+            graph.nodes[n]["is_critical"] = False
+        if "is_entry_point" not in graph.nodes[n]:
+            graph.nodes[n]["is_entry_point"] = False
+
     if ensure_connected and len(graph) > 1:
         connect_disconnected_components(graph)
     return graph

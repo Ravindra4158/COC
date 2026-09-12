@@ -1,0 +1,47 @@
+{
+  "baseline_weighted_risk": 8.16575,
+  "hosts_to_full_security": 3,
+  "monte_carlo_trials": 4000,
+  "method": "Greedy sequential host remediation: at each step, all vulnerabilities on the most impactful host are patched simultaneously. The simulation re-evaluates risk via CRN after each host is remediated, continuing until risk reaches 0.0.",
+  "cascade": [
+    {
+      "step": 1,
+      "host_id": 39,
+      "vulnerabilities_patched": [
+        "h39-v1",
+        "h39-v2"
+      ],
+      "risk_before": 8.16575,
+      "risk_after": 4.123,
+      "marginal_reduction": 4.04275,
+      "cumulative_reduction_percent": 49.51,
+      "is_fully_secure": false
+    },
+    {
+      "step": 2,
+      "host_id": 20,
+      "vulnerabilities_patched": [
+        "h20-v1",
+        "h20-v2"
+      ],
+      "risk_before": 4.123,
+      "risk_after": 1.648,
+      "marginal_reduction": 2.475,
+      "cumulative_reduction_percent": 79.82,
+      "is_fully_secure": false
+    },
+    {
+      "step": 3,
+      "host_id": 18,
+      "vulnerabilities_patched": [
+        "h18-v1",
+        "h18-v2"
+      ],
+      "risk_before": 1.648,
+      "risk_after": 0.0,
+      "marginal_reduction": 1.648,
+      "cumulative_reduction_percent": 100.0,
+      "is_fully_secure": true
+    }
+  ]
+}
