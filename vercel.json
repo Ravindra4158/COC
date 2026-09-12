@@ -1,0 +1,21 @@
+{
+  "framework": "vite",
+  "buildCommand": "npm --prefix frontend run build",
+  "installCommand": "npm --prefix frontend install",
+  "outputDirectory": "frontend/dist",
+  "functions": {
+    "api/index.py": {
+      "runtime": "python3.12"
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "/api"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}
