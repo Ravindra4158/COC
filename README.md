@@ -148,7 +148,7 @@ The pipeline allocates the remaining budget across the shortlist. With the defau
 - Exactly 2 vulnerabilities per host (80 findings total).
 - CVSS scores sampled via NumPy `PCG64(seed=20260911)` uniformly from $[3.0, 9.8]$.
 - Linear exploit probability rule:
-  $$p_v = \min\left(0.95,\; \max\left(0.05,\; \frac{\operatorname{CVSS}(v) - 2.0}{8.0}\right)\right)$$
+  $$p_v = \min\left(0.95, \max\left(0.05, \frac{\mathrm{CVSS}(v) - 2.0}{8.0}\right)\right)$$
 - **Host Compromise Probability**:
   $$P_{\text{comp}}(H) = 1 - \prod_{v \in V(H)} (1 - p_v)$$
 - **Marginal Enablement ($\Delta P_{\text{comp}}$)**:
@@ -161,19 +161,19 @@ The pipeline allocates the remaining budget across the shortlist. With the defau
   $$A(h) = \frac{1}{1 + d_{\text{entry}}(h)}$$
   where unreachable hosts have $A(h)=0$.
 - Critical-asset exposure combines simulated downstream breach probability and distance:
-  $$E(h) = \min\left(1,\; 0.75\frac{\sum_{a \in D(h)} \bar{c}_a q_a}{\sum_{a \in C} \bar{c}_a} + \frac{0.25}{1 + d_{\text{critical}}(h)}\right)$$
+  $$E(h) = \min\left(1, 0.75\frac{\sum_{a \in D(h)} \bar{c}_a q_a}{\sum_{a \in C} \bar{c}_a} + \frac{0.25}{1 + d_{\text{critical}}(h)}\right)$$
   Here $D(h)$ is the set of downstream critical assets, $C$ is the complete critical-asset set, $\bar{c}_a=\min(1,c_a)$ is normalized criticality, and $q_a$ is the simulated probability of reaching asset $a$.
 - Graph importance averages normalized attack-path frequency and normalized downstream asset count:
   $$G(h) = \frac{1}{2}\frac{f(h)}{\max_x f(x)} + \frac{1}{2}\frac{|D(h)|}{\max_x |D(x)|}$$
   Each ratio is treated as $0$ when its denominator is $0$.
 - The final explainable priority score is a weighted sum on a 0–100 scale:
   $$S(v) = 100\left(0.20\,\hat{c}_v + 0.20\,p_v + 0.20\,A(h_v) + 0.25\,E(h_v) + 0.15\,G(h_v)\right)$$
-  where $\hat{c}_v=\operatorname{CVSS}(v)/10$.
+  where $\hat{c}_v = \mathrm{CVSS}(v) / 10$.
 
 ### 4. Synchronized Monte Carlo with Common Random Numbers (CRN)
 - **Zero-Variance Counterfactuals**: A random matrix of exploit rolls $\mathbf{U} \in [0, 1)^{N \times 80}$ is drawn once per seed.
 - **Deciding-vote masks**: For vulnerability $v_i$ on host $h$, the trial is affected by patching $v_i$ only when it succeeds and every sibling fails:
-  $$\operatorname{deciding}(t,v_i) = \operatorname{host\_ok}(t,h) \land \neg\left(\bigvee_{v_j \in V(h)\setminus\{v_i\}} \operatorname{success}(t,v_j)\right)$$
+  $$\mathrm{deciding}(t,v_i) = \mathrm{host\_ok}(t,h) \land \neg\left(\bigvee_{v_j \in V(h)\setminus\{v_i\}} \mathrm{success}(t,v_j)\right)$$
 - Per-trial network risk is the sum of the criticality weights of reached assets:
   $$R_t = \sum_{a \in C} c_a\,\mathbf{1}[a\text{ is reached in trial }t]$$
 - Baseline risk and the exact synchronized patch value are:
