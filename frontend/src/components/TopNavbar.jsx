@@ -52,7 +52,7 @@ export default function TopNavbar({
       <div className="topbar-left">
         <div className="system-tag">
           <span className="system-dot" />
-          <span className="system-name">CYBERGRAPH // CY-02 SENTINEL</span>
+          <span className="system-name">RISK-PATCH // ACTIVE DEFENSE</span>
           <span className="system-env">PROD // ENCLAVE-ALPHA</span>
         </div>
         <div className="live-clock">

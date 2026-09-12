@@ -9,7 +9,7 @@ from app.routes.recommendations import router as recommendations_router
 from app.routes.vulnerabilities import router as vulnerabilities_router
 
 logging.basicConfig(level=logging.INFO)
-app = FastAPI(title="CY-02 Vulnerability Prioritization API", version="1.0.0")
+app = FastAPI(title="RISK-PATCH Vulnerability Prioritization API", version="1.0.0")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
