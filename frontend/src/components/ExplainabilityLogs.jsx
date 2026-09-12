@@ -72,7 +72,7 @@ export default function ExplainabilityLogs({
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `cy02_security_audit_report_${Date.now()}.json`;
+    a.download = `risk_patch_security_audit_report_${Date.now()}.json`;
     a.click();
     URL.revokeObjectURL(url);
   };

@@ -78,44 +78,46 @@ export default function ExplainabilityPanel({
         {/* Right Column: Interactive Attack Path Witness */}
         <div className="path-witness-card">
           <div className="witness-header">
-            <div>
+            <div className="witness-header-left">
               <span className="card-sub-header">ACTIVE ATTACK PATH WITNESS</span>
               <span className="witness-vuln">
-                Target: {topRec?.vulnerability_id || 'h39-v2'} on Node #{topRec?.host_id || 39}
+                Target: <b>{topRec?.vulnerability_id || 'h38-v1'}</b> on Node #{topRec?.host_id || 38}
               </span>
             </div>
             <span className="witness-reduction text-emerald">
-              -{Number(topRec?.risk_reduction_percent || 28.2).toFixed(1)}% Risk
+              -{Number(topRec?.risk_reduction_percent || 14.4).toFixed(1)}% Risk
             </span>
           </div>
 
           {/* Stepper Graphic: Entry -> Node -> Node -> Critical Asset */}
-          <div className="path-stepper">
-            {pathNodes.map((node, i) => {
-              const idNum = Number(node);
-              const isEntry = [0, 1].includes(idNum);
-              const isCrit = [35, 36, 37, 38, 39].includes(idNum);
-              const isLast = i === pathNodes.length - 1;
+          <div className="path-stepper-container">
+            <span className="stepper-label">ADVERSARY TRAVERSAL ROUTE:</span>
+            <div className="path-stepper">
+              {pathNodes.map((node, i) => {
+                const idNum = Number(node);
+                const isEntry = [0, 1].includes(idNum);
+                const isCrit = [35, 36, 37, 38, 39].includes(idNum);
+                const isLast = i === pathNodes.length - 1;
 
-              return (
-                <React.Fragment key={i}>
-                  <div className={`step-node ${isEntry ? 'step-entry' : ''} ${isCrit ? 'step-crit' : ''}`}>
-                    <div className="node-circle">
-                      <span>#{node}</span>
+                return (
+                  <React.Fragment key={i}>
+                    <div className={`step-node ${isEntry ? 'step-entry' : ''} ${isCrit ? 'step-crit' : ''}`}>
+                      <div className="node-circle">
+                        <span>#{node}</span>
+                      </div>
+                      <span className="node-caption">
+                        {isEntry ? 'ENTRY' : isCrit ? 'TARGET' : 'TRANSIT'}
+                      </span>
                     </div>
-                    <span className="node-caption">
-                      {isEntry ? 'ENTRY' : isCrit ? 'CRITICAL ASSET' : 'TRANSIT'}
-                    </span>
-                  </div>
-                  {!isLast && (
-                    <div className="step-arrow">
-                      <div className="arrow-line" />
-                      <span>→</span>
-                    </div>
-                  )}
-                </React.Fragment>
-              );
-            })}
+                    {!isLast && (
+                      <div className="step-arrow">
+                        <span className="step-arrow-char">→</span>
+                      </div>
+                    )}
+                  </React.Fragment>
+                );
+              })}
+            </div>
           </div>
 
           {/* Explanation Narrative Box */}
@@ -125,7 +127,7 @@ export default function ExplainabilityPanel({
               <strong>Why this patch breaks the attack chain:</strong>
               <p>
                 {topRec?.reason ||
-                  `Vulnerability ${topRec?.vulnerability_id || 'h39-v2'} sits directly on the shortest attack path (${pathNodes.join(' → ')}). Patching this vulnerability severs attacker reachability into critical asset #${topRec?.host_id || 39}, forcing adversaries into dead-end paths or multi-hop detours.`}
+                  `Vulnerability ${topRec?.vulnerability_id || 'h38-v1'} sits directly on the shortest attack path (${pathNodes.join(' → ')}). Patching this vulnerability severs attacker reachability into critical asset #${topRec?.host_id || 38}, forcing adversaries into dead-end paths or multi-hop detours.`}
               </p>
             </div>
           </div>
