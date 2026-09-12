@@ -13,9 +13,9 @@
     "associated_path_display": "0 \u2192 29 \u2192 39",
     "baseline_weighted_risk": 11.2145,
     "patched_weighted_risk": 8.104,
-    "estimated_risk_reduction_fraction": 0.27736413,
+    "estimated_risk_reduction_fraction": 0.277364,
     "estimated_risk_reduction_percent": 27.7364,
-    "explanation": "h39-v2 on host 39 (CVSS 8.4, exploit prob 0.802) sits on attack path 0 \u2192 29 \u2192 39. Individual host-enablement contribution: 0.6692 (probability this vuln alone breaches its host). Patching it reduces the network's weighted critical-asset risk from 11.2145 to 8.1040 (\u221227.74%), measured via 4000 synchronized Monte Carlo trials."
+    "explanation": "h39-v2 on host 39 (CVSS 8.4, exploit prob 0.802) sits on attack path 0 \u2192 29 \u2192 39. Marginal host enablement: 0.6692 (probability this vulnerability uniquely opens its host). Mitigating it reduces the network's weighted critical-asset risk from 11.2145 to 8.1040 (-27.74%), measured via 4000 synchronized Monte Carlo trials."
   },
   {
     "rank": 2,
@@ -32,9 +32,9 @@
     "associated_path_display": "0 \u2192 12 \u2192 8 \u2192 36",
     "baseline_weighted_risk": 11.2145,
     "patched_weighted_risk": 10.137,
-    "estimated_risk_reduction_fraction": 0.09608097,
+    "estimated_risk_reduction_fraction": 0.096081,
     "estimated_risk_reduction_percent": 9.6081,
-    "explanation": "h36-v1 on host 36 (CVSS 9.6, exploit prob 0.949) sits on attack path 0 \u2192 12 \u2192 8 \u2192 36. Individual host-enablement contribution: 0.5640 (probability this vuln alone breaches its host). Patching it reduces the network's weighted critical-asset risk from 11.2145 to 10.1370 (\u22129.61%), measured via 4000 synchronized Monte Carlo trials."
+    "explanation": "h36-v1 on host 36 (CVSS 9.6, exploit prob 0.949) sits on attack path 0 \u2192 12 \u2192 8 \u2192 36. Marginal host enablement: 0.5640 (probability this vulnerability uniquely opens its host). Mitigating it reduces the network's weighted critical-asset risk from 11.2145 to 10.1370 (-9.61%), measured via 4000 synchronized Monte Carlo trials."
   },
   {
     "rank": 3,
@@ -54,9 +54,9 @@
     "associated_path_display": "0 \u2192 12 \u2192 35 \u2192 38 \u2192 37 \u2192 29 \u2192 39",
     "baseline_weighted_risk": 11.2145,
     "patched_weighted_risk": 10.25275,
-    "estimated_risk_reduction_fraction": 0.08575951,
+    "estimated_risk_reduction_fraction": 0.08576,
     "estimated_risk_reduction_percent": 8.576,
-    "explanation": "h38-v2 on host 38 (CVSS 7.6, exploit prob 0.700) sits on attack path 0 \u2192 12 \u2192 35 \u2192 38 \u2192 37 \u2192 29 \u2192 39. Individual host-enablement contribution: 0.2474 (probability this vuln alone breaches its host). Patching it reduces the network's weighted critical-asset risk from 11.2145 to 10.2527 (\u22128.58%), measured via 4000 synchronized Monte Carlo trials."
+    "explanation": "h38-v2 on host 38 (CVSS 7.6, exploit prob 0.700) sits on attack path 0 \u2192 12 \u2192 35 \u2192 38 \u2192 37 \u2192 29 \u2192 39. Marginal host enablement: 0.2474 (probability this vulnerability uniquely opens its host). Mitigating it reduces the network's weighted critical-asset risk from 11.2145 to 10.2527 (-8.58%), measured via 4000 synchronized Monte Carlo trials."
   },
   {
     "rank": 4,
@@ -76,9 +76,9 @@
     "associated_path_display": "0 \u2192 12 \u2192 35 \u2192 38 \u2192 37 \u2192 29 \u2192 39",
     "baseline_weighted_risk": 11.2145,
     "patched_weighted_risk": 10.40475,
-    "estimated_risk_reduction_fraction": 0.07220563,
+    "estimated_risk_reduction_fraction": 0.072206,
     "estimated_risk_reduction_percent": 7.2206,
-    "explanation": "h38-v1 on host 38 (CVSS 7.2, exploit prob 0.647) sits on attack path 0 \u2192 12 \u2192 35 \u2192 38 \u2192 37 \u2192 29 \u2192 39. Individual host-enablement contribution: 0.1939 (probability this vuln alone breaches its host). Patching it reduces the network's weighted critical-asset risk from 11.2145 to 10.4047 (\u22127.22%), measured via 4000 synchronized Monte Carlo trials."
+    "explanation": "h38-v1 on host 38 (CVSS 7.2, exploit prob 0.647) sits on attack path 0 \u2192 12 \u2192 35 \u2192 38 \u2192 37 \u2192 29 \u2192 39. Marginal host enablement: 0.1939 (probability this vulnerability uniquely opens its host). Mitigating it reduces the network's weighted critical-asset risk from 11.2145 to 10.4047 (-7.22%), measured via 4000 synchronized Monte Carlo trials."
   },
   {
     "rank": 5,
@@ -99,9 +99,9 @@
     "associated_path_display": "0 \u2192 29 \u2192 26 \u2192 25 \u2192 22 \u2192 11 \u2192 7 \u2192 39",
     "baseline_weighted_risk": 11.2145,
     "patched_weighted_risk": 10.5445,
-    "estimated_risk_reduction_fraction": 0.05974408,
+    "estimated_risk_reduction_fraction": 0.059744,
     "estimated_risk_reduction_percent": 5.9744,
-    "explanation": "h26-v2 on host 26 (CVSS 9.0, exploit prob 0.874) sits on attack path 0 \u2192 29 \u2192 26 \u2192 25 \u2192 22 \u2192 11 \u2192 7 \u2192 39. Individual host-enablement contribution: 0.1152 (probability this vuln alone breaches its host). Patching it reduces the network's weighted critical-asset risk from 11.2145 to 10.5445 (\u22125.97%), measured via 4000 synchronized Monte Carlo trials."
+    "explanation": "h26-v2 on host 26 (CVSS 9.0, exploit prob 0.874) sits on attack path 0 \u2192 29 \u2192 26 \u2192 25 \u2192 22 \u2192 11 \u2192 7 \u2192 39. Marginal host enablement: 0.1152 (probability this vulnerability uniquely opens its host). Mitigating it reduces the network's weighted critical-asset risk from 11.2145 to 10.5445 (-5.97%), measured via 4000 synchronized Monte Carlo trials."
   },
   {
     "rank": 6,
@@ -122,9 +122,9 @@
     "associated_path_display": "0 \u2192 29 \u2192 26 \u2192 25 \u2192 22 \u2192 11 \u2192 7 \u2192 39",
     "baseline_weighted_risk": 11.2145,
     "patched_weighted_risk": 10.57975,
-    "estimated_risk_reduction_fraction": 0.05660083,
+    "estimated_risk_reduction_fraction": 0.056601,
     "estimated_risk_reduction_percent": 5.6601,
-    "explanation": "h26-v1 on host 26 (CVSS 8.9, exploit prob 0.868) sits on attack path 0 \u2192 29 \u2192 26 \u2192 25 \u2192 22 \u2192 11 \u2192 7 \u2192 39. Individual host-enablement contribution: 0.1094 (probability this vuln alone breaches its host). Patching it reduces the network's weighted critical-asset risk from 11.2145 to 10.5797 (\u22125.66%), measured via 4000 synchronized Monte Carlo trials."
+    "explanation": "h26-v1 on host 26 (CVSS 8.9, exploit prob 0.868) sits on attack path 0 \u2192 29 \u2192 26 \u2192 25 \u2192 22 \u2192 11 \u2192 7 \u2192 39. Marginal host enablement: 0.1094 (probability this vulnerability uniquely opens its host). Mitigating it reduces the network's weighted critical-asset risk from 11.2145 to 10.5797 (-5.66%), measured via 4000 synchronized Monte Carlo trials."
   },
   {
     "rank": 7,
@@ -140,9 +140,9 @@
     "associated_path_display": "0 \u2192 29 \u2192 39",
     "baseline_weighted_risk": 11.2145,
     "patched_weighted_risk": 10.63475,
-    "estimated_risk_reduction_fraction": 0.05169646,
+    "estimated_risk_reduction_fraction": 0.051696,
     "estimated_risk_reduction_percent": 5.1696,
-    "explanation": "h29-v1 on host 29 (CVSS 8.0, exploit prob 0.753) sits on attack path 0 \u2192 29 \u2192 39. Individual host-enablement contribution: 0.2983 (probability this vuln alone breaches its host). Patching it reduces the network's weighted critical-asset risk from 11.2145 to 10.6347 (\u22125.17%), measured via 4000 synchronized Monte Carlo trials."
+    "explanation": "h29-v1 on host 29 (CVSS 8.0, exploit prob 0.753) sits on attack path 0 \u2192 29 \u2192 39. Marginal host enablement: 0.2983 (probability this vulnerability uniquely opens its host). Mitigating it reduces the network's weighted critical-asset risk from 11.2145 to 10.6347 (-5.17%), measured via 4000 synchronized Monte Carlo trials."
   },
   {
     "rank": 8,
@@ -164,9 +164,9 @@
     "associated_path_display": "0 \u2192 29 \u2192 37 \u2192 38 \u2192 16 \u2192 5 \u2192 11 \u2192 7 \u2192 39",
     "baseline_weighted_risk": 11.2145,
     "patched_weighted_risk": 10.655,
-    "estimated_risk_reduction_fraction": 0.04989077,
+    "estimated_risk_reduction_fraction": 0.049891,
     "estimated_risk_reduction_percent": 4.9891,
-    "explanation": "h37-v1 on host 37 (CVSS 3.9, exploit prob 0.238) sits on attack path 0 \u2192 29 \u2192 37 \u2192 38 \u2192 16 \u2192 5 \u2192 11 \u2192 7 \u2192 39. Individual host-enablement contribution: 0.1908 (probability this vuln alone breaches its host). Patching it reduces the network's weighted critical-asset risk from 11.2145 to 10.6550 (\u22124.99%), measured via 4000 synchronized Monte Carlo trials."
+    "explanation": "h37-v1 on host 37 (CVSS 3.9, exploit prob 0.238) sits on attack path 0 \u2192 29 \u2192 37 \u2192 38 \u2192 16 \u2192 5 \u2192 11 \u2192 7 \u2192 39. Marginal host enablement: 0.1908 (probability this vulnerability uniquely opens its host). Mitigating it reduces the network's weighted critical-asset risk from 11.2145 to 10.6550 (-4.99%), measured via 4000 synchronized Monte Carlo trials."
   },
   {
     "rank": 9,
@@ -187,9 +187,9 @@
     "associated_path_display": "0 \u2192 12 \u2192 8 \u2192 14 \u2192 15 \u2192 37 \u2192 29 \u2192 39",
     "baseline_weighted_risk": 11.2145,
     "patched_weighted_risk": 10.7465,
-    "estimated_risk_reduction_fraction": 0.04173169,
+    "estimated_risk_reduction_fraction": 0.041732,
     "estimated_risk_reduction_percent": 4.1732,
-    "explanation": "h8-v1 on host 8 (CVSS 9.0, exploit prob 0.871) sits on attack path 0 \u2192 12 \u2192 8 \u2192 14 \u2192 15 \u2192 37 \u2192 29 \u2192 39. Individual host-enablement contribution: 0.2450 (probability this vuln alone breaches its host). Patching it reduces the network's weighted critical-asset risk from 11.2145 to 10.7465 (\u22124.17%), measured via 4000 synchronized Monte Carlo trials."
+    "explanation": "h8-v1 on host 8 (CVSS 9.0, exploit prob 0.871) sits on attack path 0 \u2192 12 \u2192 8 \u2192 14 \u2192 15 \u2192 37 \u2192 29 \u2192 39. Marginal host enablement: 0.2450 (probability this vulnerability uniquely opens its host). Mitigating it reduces the network's weighted critical-asset risk from 11.2145 to 10.7465 (-4.17%), measured via 4000 synchronized Monte Carlo trials."
   },
   {
     "rank": 10,
@@ -211,8 +211,8 @@
     "associated_path_display": "0 \u2192 29 \u2192 37 \u2192 38 \u2192 16 \u2192 5 \u2192 11 \u2192 7 \u2192 39",
     "baseline_weighted_risk": 11.2145,
     "patched_weighted_risk": 10.77,
-    "estimated_risk_reduction_fraction": 0.03963619,
+    "estimated_risk_reduction_fraction": 0.039636,
     "estimated_risk_reduction_percent": 3.9636,
-    "explanation": "h37-v2 on host 37 (CVSS 3.6, exploit prob 0.199) sits on attack path 0 \u2192 29 \u2192 37 \u2192 38 \u2192 16 \u2192 5 \u2192 11 \u2192 7 \u2192 39. Individual host-enablement contribution: 0.1516 (probability this vuln alone breaches its host). Patching it reduces the network's weighted critical-asset risk from 11.2145 to 10.7700 (\u22123.96%), measured via 4000 synchronized Monte Carlo trials."
+    "explanation": "h37-v2 on host 37 (CVSS 3.6, exploit prob 0.199) sits on attack path 0 \u2192 29 \u2192 37 \u2192 38 \u2192 16 \u2192 5 \u2192 11 \u2192 7 \u2192 39. Marginal host enablement: 0.1516 (probability this vulnerability uniquely opens its host). Mitigating it reduces the network's weighted critical-asset risk from 11.2145 to 10.7700 (-3.96%), measured via 4000 synchronized Monte Carlo trials."
   }
 ]

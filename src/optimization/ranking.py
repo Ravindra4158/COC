@@ -8,7 +8,8 @@ def rank_patch_candidates(results: Any) -> pd.DataFrame:
     """Rank patch candidates by measured risk reduction with deterministic ties."""
     frame = results.copy() if isinstance(results, pd.DataFrame) else pd.DataFrame(results)
     if frame.empty:
-        frame.insert(0, "rank", pd.Series(dtype="int64"))
+        if "rank" not in frame.columns:
+            frame.insert(0, "rank", pd.Series(dtype="int64"))
         return frame
     for column in ("patch_value", "risk_reduction_percent", "priority_score", "cvss"):
         if column not in frame:

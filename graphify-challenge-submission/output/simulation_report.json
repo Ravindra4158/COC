@@ -3,10 +3,11 @@
   "monte_carlo_trials_drawn": 4000,
   "total_simulations_used": 4000,
   "within_budget": true,
-  "method": "Common-random-numbers: 4 000 exploit-outcome matrices pre-drawn once and reused for baseline + all 80 patch scenarios.  Each patch scenario replays BFS on the same random outcomes with one vulnerability disabled.",
+  "method": "Common Random Numbers (CRN): Synchronized Monte Carlo exploit-outcome matrices drawn once and reused across baseline and all counterfactual patch scenarios via deciding-vote masks, delivering zero Monte Carlo variance.",
   "baseline_weighted_risk": 11.2145,
-  "vulnerabilities_evaluated": 80,
-  "non_zero_patch_values": 53,
+  "total_hosts": 40,
+  "total_vulnerabilities": 80,
+  "vulnerabilities_with_measurable_patch_value": 53,
   "top_k": 10,
-  "runtime_sec": 0.7011
+  "runtime_seconds": 0.8752
 }

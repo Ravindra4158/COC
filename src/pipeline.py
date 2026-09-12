@@ -84,6 +84,30 @@ def run_analysis(
         node for node, attrs in graph.nodes(data=True) if attrs.get("is_entry_point")
     ]
     critical_assets = list(data["critical_assets"]["host_id"])
+    crit_set = set(critical_assets)
+
+    # Robust entry points resolution
+    flagged_entries = [
+        node for node, attrs in graph.nodes(data=True) if attrs.get("is_entry_point")
+    ]
+    if flagged_entries:
+        entry_points = flagged_entries
+    else:
+        valid_configured = [e for e in configured_entries if e in graph]
+        if valid_configured:
+            entry_points = valid_configured
+        elif 0 in graph and 1 in graph:
+            entry_points = [0, 1]
+        elif "0" in graph and "1" in graph:
+            entry_points = ["0", "1"]
+        else:
+            def _sort_k(n):
+                try:
+                    return (0, int(n))
+                except (ValueError, TypeError):
+                    return (1, str(n))
+            non_crit = [n for n in sorted(graph.nodes, key=_sort_k) if n not in crit_set]
+            entry_points = non_crit[:2] if non_crit else list(sorted(graph.nodes, key=_sort_k))[:2]
 
     graph_analysis = analyze_attack_graph(
         graph, entry_points, critical_assets, max_path_length=39, max_paths_per_target=1
@@ -127,6 +151,11 @@ def run_analysis(
         candidate for candidate in filter_patch_candidates(scored, graph_analysis)
         if candidate.get("associated_path") and candidate.get("vulnerability_id") not in disabled_set
     ]
+    if not candidates:
+        candidates = [
+            candidate for candidate in filter_patch_candidates(scored, graph_analysis)
+            if candidate.get("vulnerability_id") not in disabled_set
+        ]
 
     remaining_budget = max(1, MAX_SIMULATIONS - baseline.simulations)
     requested_patch_simulations = int(optimization_config.get("patch_simulations", 500))
@@ -280,3 +309,24 @@ def _path_through_host(graph, host_id: Any, entry_points: list[Any], critical_as
 def _recommendation_reason(row: pd.Series) -> str:
     """Backward-compatible wrapper for generate_recommendation_reason."""
     return generate_recommendation_reason(row)
+
+
+if __name__ == "__main__":
+    import argparse
+    parser = argparse.ArgumentParser(description="Attack-Path-Aware Vulnerability Prioritization Pipeline")
+    parser.add_argument("--data-dir", type=str, default=None, help="Directory containing CSV data (hosts.csv, etc.)")
+    parser.add_argument("--config", type=str, default="config.yaml", help="Path to YAML configuration")
+    parser.add_argument("--seed", type=int, default=None, help="Random seed for simulation and graph")
+    parser.add_argument("--output-dir", type=str, default="output", help="Directory for output artifacts")
+    args = parser.parse_args()
+
+    supplied = None
+    if args.data_dir:
+        supplied = load_all_data(args.data_dir)
+
+    result = run_analysis(config_path=args.config, data=supplied, seed=args.seed)
+    print(f"Ranked {len(result['scored'])} vulnerabilities on {len(result['graph'].nodes)} hosts.")
+    print(f"Top 10 patch recommendations generated.")
+    print(f"Simulations used: {result['summary']['simulation_count']} / {MAX_SIMULATIONS}")
+    print(f"Baseline risk: {result['summary']['baseline_risk']:.4f}")
+

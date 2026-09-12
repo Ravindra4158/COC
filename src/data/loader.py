@@ -25,11 +25,18 @@ def _load_csv(path: Path, name: str) -> pd.DataFrame:
 
 
 def load_hosts(path: str | Path) -> pd.DataFrame:
-    return _load_csv(Path(path), "hosts")
+    frame = _load_csv(Path(path), "hosts")
+    if "name" not in frame.columns:
+        frame["name"] = frame["host_id"].astype(str)
+    return frame
 
 
 def load_vulnerabilities(path: str | Path) -> pd.DataFrame:
-    return _load_csv(Path(path), "vulnerabilities")
+    frame = _load_csv(Path(path), "vulnerabilities")
+    if "exploit_probability" not in frame.columns and "cvss" in frame.columns:
+        cvss = pd.to_numeric(frame["cvss"], errors="coerce")
+        frame["exploit_probability"] = np.clip((cvss - 2.0) / 8.0, 0.05, 0.95)
+    return frame
 
 
 def load_network_edges(path: str | Path) -> pd.DataFrame:
@@ -37,7 +44,10 @@ def load_network_edges(path: str | Path) -> pd.DataFrame:
 
 
 def load_critical_assets(path: str | Path) -> pd.DataFrame:
-    return _load_csv(Path(path), "critical_assets")
+    frame = _load_csv(Path(path), "critical_assets")
+    if "criticality" not in frame.columns:
+        frame["criticality"] = 1.0
+    return frame
 
 
 def load_all_data(data_dir: str | Path) -> dict[str, pd.DataFrame]:

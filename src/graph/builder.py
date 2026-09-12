@@ -8,7 +8,36 @@ def _as_bool(value) -> bool:
     return bool(value)
 
 
-def build_network_graph(hosts: pd.DataFrame, network_edges: pd.DataFrame, vulnerabilities=None, critical_assets=None, directed: bool = True) -> nx.Graph:
+def _node_sort_key(node: object) -> tuple[int, object]:
+    try:
+        return (0, int(node))  # type: ignore[arg-type]
+    except (ValueError, TypeError):
+        return (1, str(node))
+
+
+def connect_disconnected_components(graph: nx.Graph | nx.DiGraph) -> nx.Graph | nx.DiGraph:
+    """Connect adjacent components by their lowest-numbered nodes per development rule."""
+    if len(graph) <= 1:
+        return graph
+    is_dir = graph.is_directed()
+    comp_gen = nx.weakly_connected_components(graph) if is_dir else nx.connected_components(graph)
+    comps = sorted(
+        (sorted(c, key=_node_sort_key) for c in comp_gen),
+        key=lambda c: _node_sort_key(c[0]),
+    )
+    for left, right in zip(comps, comps[1:]):
+        graph.add_edge(left[0], right[0])
+    return graph
+
+
+def build_network_graph(
+    hosts: pd.DataFrame,
+    network_edges: pd.DataFrame,
+    vulnerabilities=None,
+    critical_assets=None,
+    directed: bool = True,
+    ensure_connected: bool = True,
+) -> nx.Graph:
     """Build a directed or undirected network while preserving host annotations."""
     graph = nx.DiGraph() if directed else nx.Graph()
     for row in hosts.itertuples(index=False):
@@ -27,6 +56,8 @@ def build_network_graph(hosts: pd.DataFrame, network_edges: pd.DataFrame, vulner
             attributes["is_critical"] = True
             if hasattr(row, "criticality"):
                 attributes["criticality"] = row.criticality
+    if ensure_connected and len(graph) > 1:
+        connect_disconnected_components(graph)
     return graph
 
 

@@ -70,9 +70,15 @@ def _normalise_vulnerabilities(vulnerabilities: Any) -> list[dict[str, Any]]:
     result = []
     for row in rows:
         vid = row.get("vuln_id", row.get("vulnerability_id"))
-        if vid is None or "host_id" not in row or "exploit_probability" not in row:
-            raise ValueError("each vulnerability requires vuln_id, host_id, and exploit_probability")
-        probability = float(row["exploit_probability"])
+        if vid is None or "host_id" not in row:
+            raise ValueError("each vulnerability requires vuln_id and host_id")
+        probability = row.get("exploit_probability")
+        if probability is None or (isinstance(probability, float) and np.isnan(probability)):
+            if "cvss" in row and row["cvss"] is not None:
+                probability = min(0.95, max(0.05, (float(row["cvss"]) - 2.0) / 8.0))
+            else:
+                raise ValueError(f"vulnerability {vid} requires exploit_probability or cvss")
+        probability = float(probability)
         if not 0 <= probability <= 1:
             raise ValueError(f"exploit probability for {vid} must be between 0 and 1")
         result.append({
