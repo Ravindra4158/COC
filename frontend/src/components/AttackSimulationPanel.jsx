@@ -123,20 +123,15 @@ export default function AttackSimulationPanel({
     setStep(prev => prev + 1);
 
     // Record history log entry
-    let logMsg = `Step ${step + 1}: Breached ${newlyBreached.length} node(s) [${newlyBreached.join(', ') || 'none'}].`;
-    if (blockedNodes.length > 0) {
-      logMsg += ` Blocked by virtual patch at node(s) [${blockedNodes.join(', ')}].`;
-    }
-    if (currentBreachedTargets.length > 0) {
-      logMsg += ` Critical assets compromised: [${currentBreachedTargets.join(', ')}].`;
-    }
-
+    const newlyBreachedTargets = newlyBreached.filter(id => CRITICAL_TARGETS.includes(id));
     setHistory(prev => [
       {
         step: step + 1,
-        text: logMsg,
         newlyBreached,
         blockedNodes,
+        criticalBreaches: newlyBreachedTargets,
+        totalCompromised: updatedCompromised.length,
+        frontierCount: nextFrontier.length,
       },
       ...prev,
     ]);
@@ -236,7 +231,7 @@ export default function AttackSimulationPanel({
           <span className="stat-val text-amber">{frontier.length} HOSTS</span>
         </div>
         <div className="sim-stat">
-          <span className="stat-label">CRITICAL ASSETS BREACHED</span>
+          <span className="stat-label">CRITICAL BREACHED</span>
           <span className={`stat-val ${breachedTargets.length > 0 ? 'text-rose font-bold' : 'text-emerald'}`}>
             {breachedTargets.length} / 5
           </span>
@@ -283,19 +278,77 @@ export default function AttackSimulationPanel({
         </div>
       </div>
 
-      {/* Live Simulation Step Logs */}
+      {/* Live Simulation Step Logs - Expanded & Legible */}
       <div className="sim-log-viewer">
         <div className="log-header">
-          <span>EVENT LOG TRACE</span>
-          <span className="log-count">{history.length} STEPS LOGGED</span>
+          <div className="log-header-title">
+            <span className="live-telemetry-indicator">● LIVE</span>
+            <span className="log-header-label">ATTACK PROPAGATION TRACE & EVENT LOG</span>
+          </div>
+          <span className="log-count">{history.length} {history.length === 1 ? 'EVENT' : 'EVENTS'} LOGGED</span>
         </div>
         <div className="log-stream">
-          {history.map((h, i) => (
-            <div key={i} className={`log-entry ${h.step === step ? 'latest' : ''}`}>
-              <span className="log-step">[{String(h.step).padStart(2, '0')}]</span>
-              <span className="log-text">{h.text}</span>
-            </div>
-          ))}
+          {history.map((h, i) => {
+            const isLatest = h.step === step;
+            return (
+              <div key={i} className={`log-entry ${isLatest ? 'latest' : ''}`}>
+                <div className="log-entry-badge">
+                  <span className="log-step-tag">
+                    {h.step === 0 ? 'INIT' : `STEP ${String(h.step).padStart(2, '0')}`}
+                  </span>
+                </div>
+                <div className="log-entry-content">
+                  {h.step === 0 ? (
+                    <div className="log-msg-line">
+                      <span>Attacker foothold established at entry points </span>
+                      <span className="log-node-tag entry-tag">Node 0</span>
+                      <span> and </span>
+                      <span className="log-node-tag entry-tag">Node 1</span>
+                      <span>. Initial attack graph reconnaissance in progress.</span>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="log-msg-line">
+                        {h.newlyBreached && h.newlyBreached.length > 0 ? (
+                          <>
+                            <span>Breached </span>
+                            <b className="text-rose">{h.newlyBreached.length} host{h.newlyBreached.length > 1 ? 's' : ''}: </b>
+                            {h.newlyBreached.map(id => (
+                              <span key={id} className={`log-node-tag ${CRITICAL_TARGETS.includes(id) ? 'crit-tag' : 'breached-tag'}`}>
+                                Node {id}{CRITICAL_TARGETS.includes(id) ? ' [CRIT]' : ''}
+                              </span>
+                            ))}
+                          </>
+                        ) : (
+                          <span className="text-muted">No new hosts penetrated in this cycle.</span>
+                        )}
+                      </div>
+
+                      {h.blockedNodes && h.blockedNodes.length > 0 && (
+                        <div className="log-blocked-line">
+                          <span className="log-shield-icon">🛡️</span>
+                          <span className="text-emerald font-semibold">Virtual Patch Blocked Traversal at:</span>
+                          {h.blockedNodes.map(id => (
+                            <span key={id} className="log-node-tag patch-tag">Node {id}</span>
+                          ))}
+                        </div>
+                      )}
+
+                      {h.criticalBreaches && h.criticalBreaches.length > 0 && (
+                        <div className="log-crit-alert-line">
+                          <span className="log-alert-icon">⚠️</span>
+                          <span className="text-rose font-bold">CRITICAL ASSET PENETRATION DETECTED:</span>
+                          {h.criticalBreaches.map(id => (
+                            <span key={id} className="log-node-tag crit-breach-tag">Asset #{id}</span>
+                          ))}
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>
+              </div>
+            );
+          })}
         </div>
       </div>
     </div>

@@ -11,6 +11,7 @@ import NodeDetailDrawer from './components/NodeDetailDrawer';
 import PatchImpactView from './components/PatchImpactView';
 import ExplainabilityLogs from './components/ExplainabilityLogs';
 import LoadingState from './components/LoadingState';
+import SplashLanding from './components/SplashLanding';
 
 import {
   getAnalysis,
@@ -22,6 +23,7 @@ import {
 } from './services/api';
 
 export default function App() {
+  const [showSplash, setShowSplash] = useState(true);
   const [currentTab, setCurrentTab] = useState('dashboard');
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -167,7 +169,7 @@ export default function App() {
               </div>
             </div>
 
-            {/* Section 4: Vulnerability Ranking Table */}
+            {/* Section 4: Vulnerability Ranking Table (Top 10 in Dashboard) */}
             <div className="dashboard-full-row">
               <VulnerabilityRankingTable
                 items={data.vulnerabilities}
@@ -175,6 +177,8 @@ export default function App() {
                 onSelect={setSelectedFinding}
                 activePatches={activePatches}
                 onTogglePatch={handleTogglePatch}
+                limit={10}
+                onViewAll={() => setCurrentTab('ranking')}
               />
             </div>
 
@@ -217,7 +221,7 @@ export default function App() {
       case 'simulation':
         return (
           <div className="tab-standalone-page">
-            <div className="dashboard-two-col">
+            <div className="dashboard-two-col simulation-full-page">
               <div className="col-graph">
                 <NetworkGraph
                   network={data.network}
@@ -250,6 +254,7 @@ export default function App() {
               onSelect={setSelectedFinding}
               activePatches={activePatches}
               onTogglePatch={handleTogglePatch}
+              limit={10}
             />
           </div>
         );
@@ -285,54 +290,57 @@ export default function App() {
   };
 
   return (
-    <div className="cyber-app-shell">
-      {/* Left Sidebar */}
-      <Sidebar
-        currentTab={currentTab}
-        setTab={setCurrentTab}
-        activePatchesCount={activePatches.length}
-      />
-
-      {/* Main Operations Area */}
-      <div className="cyber-main-viewport">
-        {/* Top Navbar */}
-        <TopNavbar
-          running={running}
-          onRunSimulation={handleRunSimulation}
-          activeSeed={activeSeed}
-          onChangeSeed={handleChangeSeed}
-          activePatches={activePatches}
-          onResetState={handleResetState}
+    <>
+      {showSplash && <SplashLanding onComplete={() => setShowSplash(false)} />}
+      <div className="cyber-app-shell">
+        {/* Left Sidebar */}
+        <Sidebar
+          currentTab={currentTab}
+          setTab={setCurrentTab}
+          activePatchesCount={activePatches.length}
         />
 
-        {/* Global Error Banner */}
-        {error && (
-          <div className="cyber-error-banner">
-            <div className="error-content">
-              <span className="error-icon">⚠️</span>
-              <span className="error-text">{error}</span>
-            </div>
-            <button className="error-retry-btn" onClick={loadData}>
-              RETRY
-            </button>
-          </div>
-        )}
-
-        {/* Dynamic View Content */}
-        <main className="cyber-content-container">{renderContent()}</main>
-
-        {/* Side Drawer when a node is selected */}
-        {selectedNode && (
-          <NodeDetailDrawer
-            node={selectedNode}
-            vulnerabilities={data?.vulnerabilities || []}
-            network={data?.network}
+        {/* Main Operations Area */}
+        <div className="cyber-main-viewport">
+          {/* Top Navbar */}
+          <TopNavbar
+            running={running}
+            onRunSimulation={handleRunSimulation}
+            activeSeed={activeSeed}
+            onChangeSeed={handleChangeSeed}
             activePatches={activePatches}
-            onTogglePatch={handleTogglePatch}
-            onClose={() => setSelectedNode(null)}
+            onResetState={handleResetState}
           />
-        )}
+
+          {/* Global Error Banner */}
+          {error && (
+            <div className="cyber-error-banner">
+              <div className="error-content">
+                <span className="error-icon">⚠️</span>
+                <span className="error-text">{error}</span>
+              </div>
+              <button className="error-retry-btn" onClick={loadData}>
+                RETRY
+              </button>
+            </div>
+          )}
+
+          {/* Dynamic View Content */}
+          <main className="cyber-content-container">{renderContent()}</main>
+
+          {/* Side Drawer when a node is selected */}
+          {selectedNode && (
+            <NodeDetailDrawer
+              node={selectedNode}
+              vulnerabilities={data?.vulnerabilities || []}
+              network={data?.network}
+              activePatches={activePatches}
+              onTogglePatch={handleTogglePatch}
+              onClose={() => setSelectedNode(null)}
+            />
+          )}
+        </div>
       </div>
-    </div>
+    </>
   );
 }

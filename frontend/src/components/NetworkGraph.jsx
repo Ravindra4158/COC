@@ -141,9 +141,6 @@ export default function NetworkGraph({
           style: {
             'border-color': '#00f0ff',
             'border-width': 4,
-            'shadow-blur': 14,
-            'shadow-color': '#00f0ff',
-            'shadow-opacity': 0.9,
           },
         },
       ],
